@@ -26,13 +26,13 @@
 | tree / import / export / share | 未対応 | durableの履歴・分岐とCLI形式の違いを扱う |
 | provider認証 / GitHub認証 | 未対応 | ChatGPTログインなど参照の既存実装を、共通側の認証adapterへ接続 |
 | on-demand CLI / pi-browser | 未対応 | 参照のCLI-first実装を移植。承認境界とnative hostを先に整える |
-| Android APK・native host | 実装・ビルド済み | 別ID・targetSdk 28。private展開、foreground service、Node／WebView接続。実機はまだ未検証 |
-| process death / recovery | 最小ホスト接続 | hostで親消失とgraceful reopenを検証。Android側はflockと終了処理。kill途中のツール・電源断・実機復旧、デスクトップのprofile lockは未検証／未対応 |
+| Android APK・native host | Galaxyで最小動作確認 | 別ID・targetSdk 28。private展開、foreground service、Node／WebView、keyboard resize、durableのwrite/read/bashを確認。実IME変換・実認証は未検証 |
+| process death / recovery | 限定的に検証 | Android service停止／再開とidle owner kill後の会話復元、flockを確認。実ツール途中のkill・電源断・長時間background、デスクトップのprofile lockは未検証／未対応 |
 
 ## 実装の順序
 
 1. この土台をコミットし、構造と未対応範囲を共有
-2. AndroidホストはデモAPKまでビルド。承認後に参照アプリと並行して実機確認し、実モデル認証を接続
+2. Androidホストの最小実機確認は完了。参照アプリを保持し、実モデル認証を接続する。実IME／復旧の残りの検証も続ける
 3. Piのresource loader・拡張UI能力を再利用／適応し、端末Piとの機能差を埋める
 4. 添付、履歴／tree、直接シェル、MCPなどを対応表とテストで進める
 

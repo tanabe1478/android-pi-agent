@@ -2,10 +2,10 @@
 
 個人用のAndroidローカルPi環境。`pi-durable`を唯一のエージェントバックエンドにし、`pi-tui`の設計を参考に、タッチ・IME向けの操作画面を作ります。
 
-**チェックポイント2：共通ランタイムと最小UIに、Androidホストを接続。デモAPKのビルドまで成功。実機動作・実モデル認証はまだ未検証／未実装です。**
+**チェックポイント2：共通ランタイムとAndroidホストを接続し、GalaxyでデモAPKの起動・WebView・ツール・保存／再開を確認。実モデル認証はまだ未実装です。**
 
 ```text
-Android向けUI（ブラウザ検証済み、WebView実機確認はこれから）
+Android向けUI（ブラウザとGalaxy WebViewで最小操作を検証）
     ↕ AppView / Action
 認証付きloopback HTTP・SSE
     ↕ AppController
@@ -18,7 +18,8 @@ SQLite / 明示的な作業ディレクトリ
 
 ## この区切りでできること
 
-- Android foreground service、private assets展開、Node起動、認証付きWebView接続。別IDのデモAPKをビルド（まだ実機未検証）
+- Android foreground service、private assets展開、Node起動、認証付きWebView接続。別IDのデモAPKをGalaxyで確認
+- 端末のCodingToolsによるwrite/read/bash、会話保存、service停止／再開、idle owner kill後の復元を確認（fauxのscripted fixture）
 - fauxモデルによるローカルデモ（外部モデルAPI・ホストのPi認証は使わない）
 - ストリーミング状態・思考・ツール結果の表示、生成中の入力保持
 - 送信、steering／follow-up、入力キュー取消、停止
@@ -76,4 +77,4 @@ Chrome指定時は360×780のデスクトップブラウザでもUIを検証し�
 
 新application IDは`io.github.tanabe1478.androidpi`、表示名は`Android Pi Demo`です。[Androidホスト・ビルド・保存領域・未検証範囲](docs/android.md)を参照してください。
 
-APKインストールは承認待ちです。まだ端末で使える実モデル付きPiが完成したとは扱いません。
+デモAPKは端末へインストール済みです。旧アプリ・会話・認証は移行／変更していません。まだ実モデル付きPiが完成したとは扱いません。実IMEの日本語変換や実ツール途中のkillは未検証です。

@@ -62,4 +62,4 @@ targetSdk 28の既存の実行方式を維持する。最新targetSdk／Play対�
 
 foreground serviceがassetsをprivate stagingへ展開し、flockを保持してNodeへexecする。Activityはprivate ready recordから接続し、UIとkernelのAPIは同じまま使う。`usr/`の初回baselineと更新できる`app/`を分け、home・workspace・SQLiteを保持する。
 
-APKビルドは成功。実機インストール・WebView／IME・AndroidのNode/bashは未検証。詳細は[Androidホスト](android.md)。
+APKをGalaxyへ別アプリとしてインストールし、WebViewの送信／draft保持、端末のNode/bashとCodingTools、flock、停止／再開を確認。soft keyboardの開閉とviewport縮小は確認したが、実IMEの日本語変換・実モデル認証は未検証／未実装。詳細は[Androidホストと検証範囲](android.md)。

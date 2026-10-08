@@ -12,6 +12,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.system.Os;
+import android.system.OsConstants;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -218,7 +219,17 @@ public final class RuntimeService extends Service {
     }
 
     if (child != null) {
-      child.destroy();
+      RuntimePaths.Connection connection = RuntimePaths.connection(this);
+      if (child.isAlive() && connection != null) {
+        try {
+          // Android Process.destroy() can kill immediately; send SIGTERM explicitly to our ready child.
+          Os.kill(connection.pid, OsConstants.SIGTERM);
+        } catch (Exception ignored) {
+          child.destroy();
+        }
+      } else {
+        child.destroy();
+      }
       new Thread(() -> {
         try {
           if (!child.waitFor(5, TimeUnit.SECONDS)) child.destroyForcibly();
