@@ -28,6 +28,8 @@
 
 ## Development
 
+- Keep code readable: one statement per line, multiline callbacks/methods, and blank lines between functions and logical phases (setup, validation, execution, rendering, cleanup). Do not compress code to minimize line count.
+- Use two-space indentation and aim for 100-column lines; keep literal text unchanged when reformatting.
 - Node >=22.19.0; native TypeScript type stripping, no transpilation for runtime code.
 - `npm test`; `npm run check`; optional `PI_TEST_CHROME=/path/to/chrome npm test`.
 - On-device updates use `adb install -r` only after checking active work and obtaining approval. Do not clear app data.

@@ -15,14 +15,17 @@ export const COMMANDS = Object.freeze([
  * @returns {{type:'text', text:string} | {type:'command', name:string, args:string}} */
 export function parseInput(text) {
   if (text.startsWith('//')) return { type: 'text', text: text.slice(1) };
+
   const match = text.match(/^\/([^\s]+)(?:\s+([\s\S]*))?$/);
   if (!match) return { type: 'text', text };
+
   return { type: 'command', name: match[1].toLowerCase(), args: (match[2] ?? '').trim() };
 }
 
 /** @param {string} text */
 export function suggestions(text) {
   if (!text.startsWith('/') || text.startsWith('//') || /\s/.test(text)) return [];
+
   const query = text.slice(1).toLowerCase();
   return COMMANDS.filter(command => command.name.startsWith(query));
 }
