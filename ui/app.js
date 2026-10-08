@@ -1,6 +1,7 @@
 import { COMMANDS, suggestions } from '/shared/commands.js';
 import { Client } from './client.js';
 import { Transcript, Dialog, activityOf, busyOf, element, button } from './components.js';
+import { AuthenticationPanel } from './auth.js';
 
 const $ = id => document.getElementById(id);
 
@@ -23,6 +24,16 @@ let draftRevision = 0;
 let connected = false;
 let errorMessage = '';
 
+const authentication = new AuthenticationPanel(
+  client,
+  dialog,
+  message => {
+    errorMessage = message;
+    status();
+  },
+  () => showDialog('models'),
+);
+
 function status() {
   $('status').classList.toggle('error', Boolean(errorMessage));
   $('status').textContent =
@@ -34,10 +45,19 @@ function status() {
 }
 
 function render(next) {
+  // A foreground read can race SSE. Never replace a newer view from this same owner.
+  if (
+    next.instanceId === view?.instanceId &&
+    (next.revision < view.revision || (next.auth?.revision ?? 0) < (view.auth?.revision ?? 0))
+  )
+    return;
+
   // Full committed views replace each other. No reconstruction from transient token events.
   view = next;
 
   $('mode-banner').hidden = !view.demo;
+  $('auth-bar').hidden = !view.auth || view.auth.connected;
+  authentication.render(view.auth);
   const session = view.sessions.find(session => session.id === view.activeId);
   $('sessions').textContent = session?.name ?? '会話';
 
@@ -100,25 +120,53 @@ async function dispatch(action) {
 function showDialog(kind, conversationId = view?.activeId) {
   if (!view) return;
 
-  if (kind === 'help') {
+  if (kind === 'auth') {
+    authentication.open();
+  } else if (kind === 'help') {
     dialog.show(
       '操作一覧',
       COMMANDS.map(command => element('p', `/${command.name} — ${command.description}`)),
     );
   } else if (kind === 'models') {
-    dialog.show(
-      'モデルを選択',
-      view.models.map(model =>
-        button(`${model.provider}/${model.modelId}`, async () => {
-          dialog.close();
-          await dispatch({
-            type: 'model',
-            conversationId,
-            model: { provider: model.provider, modelId: model.modelId },
-          });
-        }),
-      ),
-    );
+    const search = element('input');
+    search.setAttribute('aria-label', 'モデルを検索');
+    search.placeholder = 'モデル名で絞り込み';
+    const models = element('div', undefined, 'model-list');
+    const catalog = [...view.models].sort((left, right) => {
+      const preferred = model => (model.modelId === 'gpt-6.1-sol' ? 0 : 1);
+      return preferred(left) - preferred(right) || left.modelId.localeCompare(right.modelId);
+    });
+    const updateModels = () => {
+      const query = search.value.toLowerCase();
+      models.replaceChildren(
+        ...catalog
+          .filter(model => `${model.provider}/${model.modelId}`.toLowerCase().includes(query))
+          .map(model =>
+            button(`${model.provider}/${model.modelId}`, async () => {
+              dialog.close();
+              await dispatch({
+                type: 'model',
+                conversationId,
+                model: { provider: model.provider, modelId: model.modelId },
+              });
+            }),
+          ),
+      );
+    };
+    search.addEventListener('input', updateModels);
+    updateModels();
+    dialog.show('モデルを選択', [
+      search,
+      ...(view.demo
+        ? []
+        : [
+            element(
+              'p',
+              '登録catalogです。ChatGPT認証での利用可否はモデルやアカウントに依存します。',
+            ),
+          ]),
+      models,
+    ]);
   } else if (kind === 'thinking') {
     const current = view.conversation.docs['pi.agent']?.model;
     const model = view.models.find(
@@ -219,6 +267,7 @@ $('message').addEventListener('keydown', event => {
   }
 });
 
+$('login').addEventListener('click', () => showDialog('auth'));
 $('models').addEventListener('click', () => showDialog('models'));
 $('thinking').addEventListener('click', () => showDialog('thinking'));
 $('sessions').addEventListener('click', () => showDialog('sessions'));
@@ -231,6 +280,13 @@ $('menu').addEventListener('click', () => {
   const conversationId = view.activeId;
   dialog.show('操作', [
     button('ヘルプ', () => showDialog('help', conversationId)),
+    ...(view.auth
+      ? [
+          button(view.auth.connected ? 'ChatGPTを再認証' : 'ChatGPTログイン', () =>
+            showDialog('auth'),
+          ),
+        ]
+      : []),
     button('会話名を変更', async () => {
       const name = await dialog.input(
         '会話名',
@@ -245,7 +301,7 @@ $('menu').addEventListener('click', () => {
     button('文脈をリセット', () => {
       void dispatch({ type: 'clear', conversationId });
     }),
-    element('p', '拡張・skills・templates・MCP・認証・添付は、この最初の実装では未対応です。'),
+    element('p', '拡張・skills・templates・MCP・添付は未対応です。'),
   ]);
 });
 
@@ -266,9 +322,19 @@ void client.watch(render, connection => {
   status();
 });
 
+// Returning from the OAuth browser refreshes state without reloading the composer or replaying input.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || client.abort.signal.aborted) return;
+  void client
+    .view()
+    .then(render)
+    .catch(() => {});
+});
+
 window.addEventListener(
   'pagehide',
   () => {
+    authentication.dispose();
     client.dispose();
     transcript.dispose();
     dialog.dispose();

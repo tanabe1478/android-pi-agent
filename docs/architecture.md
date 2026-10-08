@@ -38,7 +38,7 @@ ANSI互換レンダラーを実装するのではない。TUI専用のカスタ�
 
 `AppView.conversation`はdurableの構造的なview。`pi.agent`、`pi.live`、`pi.inbox`、`pi.usage`を含む。今回はHTTP/SSEで完全なsnapshotを送る。大きな履歴のページングやexact-frame転送は将来の最適化であり、独自イベントreducerへ戻さない。
 
-すべての変更にはconversationIdが必要。画面を切り替える前に作られた操作が新しい会話に誤送信されない。最初のUIプロフィールは共有されたactiveIdを一つ持つ。複数クライアントが独立した選択を持つ機能はまだ作らない。
+すべての会話変更にはconversationIdが必要。画面を切り替える前に作られた操作が新しい会話に誤送信されない。最初のUIプロフィールは共有されたactiveIdを一つ持つ。複数クライアントが独立した選択を持つ機能はまだ作らない。
 
 通常の操作は入場処理だけを直列化する。モデルの応答全体をそのqueueで待たない。abortは別経路で実行し、入力キューと実行中の作業を止める。
 
@@ -54,7 +54,17 @@ clearはidle時のみ。短命・一度限りの確認tokenをconversationIdと�
 - 一般エラーには生のstackやprovider payloadを返さない
 - 個人用stateDirは0700、SQLiteと起動リンクは0600
 
-この認証は外部サイト／別アプリからの誤アクセスを防ぐためのもの。同じapp UIDで動くtrusted shell・拡張からの隔離ではない。実プロバイダー認証、権限UI、データ移行は未実装。AndroidではflockでNodeプロセス全体にprofileの排他を持たせる。デスクトップ起動口の複数プロセス排他は未対応。
+このbridge認証は外部サイト／別アプリからの誤アクセスを防ぐためのもの。同じapp UIDで動くtrusted shell・拡張からの隔離ではない。権限UI、データ移行は未実装。AndroidではflockでNodeプロセス全体にprofileの排他を持たせる。デスクトップ起動口の複数プロセス排他は未対応。
+
+## プロバイダー認証
+
+`runtime/auth.ts`はpi-aiの公開Models／OpenAI OAuthを利用し、既存providerのstreamをdurableへ渡します。独自の推論・tool loopやpi-coding-agentは追加しません。API-key／ambient credentialのfallbackを登録せず、新profileのOAuthだけを使います。`--demo`はcredential storageも開きません。
+
+`runtime/credentials.ts`はprovider-ownedなcredentialを0600のprivate JSONへ原子的に書き、同じowner内のread-modify-writeを直列化します。pi-aiがそのmodifyの内側でtoken refreshを行います。Androidのflockがprocess間のprofile所有を保護し、このファイルqueue自体はdesktopのprocess lockを代替しません。破損fileやsymlinkを受け入れず、失敗で既存認証を初期化しません。
+
+AppViewには非secretのAuthSummaryだけを追加します。OAuth URL／manual promptは認証専用APIで扱い、sessionId／promptIdで古い取消・回答を拒否します。認証操作はprofile単位で、会話変更ではありません。失敗したHTTP mutationを再送せず、現在の状態を読み直します。login／refreshのraw provider errorは表示・保存せず、credentialやcallback URLを会話へ入れません。
+
+既存認証を保持したまま再認証でき、5分timeout／取消／shutdownでloginを終了します。UIのconnectedは保存済み認証の存在を示すため、実token refresh／実推論の成功を証明する表示ではありません。logout UIや他providerは別の区切りです。
 
 ## Android
 
@@ -62,4 +72,4 @@ targetSdk 28の既存の実行方式を維持する。最新targetSdk／Play対�
 
 foreground serviceがassetsをprivate stagingへ展開し、flockを保持してNodeへexecする。Activityはprivate ready recordから接続し、UIとkernelのAPIは同じまま使う。`usr/`の初回baselineと更新できる`app/`を分け、home・workspace・SQLiteを保持する。
 
-APKをGalaxyへ別アプリとしてインストールし、WebViewの送信／draft保持、端末のNode/bashとCodingTools、flock、停止／再開を確認。soft keyboardの開閉とviewport縮小は確認したが、実IMEの日本語変換・実モデル認証は未検証／未実装。詳細は[Androidホストと検証範囲](android.md)。
+APKをGalaxyへ別アプリとしてインストールし、WebViewの送信／draft保持、端末のNode/bashとCodingTools、flock、停止／再開を確認。soft keyboardの開閉とviewport縮小は確認したが、実IMEの日本語変換・実モデル認証／推論は未検証。新版は認証adapterと外部ブラウザ遷移を実装したが端末更新前。詳細は[Androidホストと検証範囲](android.md)。

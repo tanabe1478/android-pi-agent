@@ -28,6 +28,9 @@ SOURCE_FILES = (
     "runtime/protocol.ts",
     "runtime/bridge.ts",
     "runtime/host-channel.ts",
+    "runtime/credentials.ts",
+    "runtime/auth.ts",
+    "ui/auth.js",
 )
 
 

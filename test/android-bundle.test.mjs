@@ -18,6 +18,16 @@ test(
     const state = path.join(root, 'state');
     await mkdir(workspace);
     execFileSync('tar', ['xzf', path.resolve(bundle), '-C', root]);
+    const sdk = execFileSync(
+      process.execPath,
+      [
+        '--input-type=module',
+        '-e',
+        "await import('@earendil-works/pi-ai/api/openai-responses'); console.log('TEST_SDK_LOAD_OK');",
+      ],
+      { cwd: path.join(root, 'app'), encoding: 'utf8' },
+    );
+    assert.match(sdk, /TEST_SDK_LOAD_OK/);
     let current;
     t.after(async () => {
       if (current) {
@@ -27,12 +37,12 @@ test(
       await rm(root, { recursive: true, force: true });
     });
 
-    async function start() {
+    async function start(demo = true) {
       const child = spawn(
         process.execPath,
         [
           path.join(root, 'app/runtime/main.ts'),
-          '--demo',
+          ...(demo ? ['--demo'] : []),
           '--bridge-file',
           '--parent-pid',
           String(process.pid),
@@ -109,6 +119,18 @@ test(
     assert.equal((await fetch(second.url + '/runtime/main.ts')).status, 404);
     second.child.kill('SIGTERM');
     assert.equal(await second.exit, 0);
+
+    // Switching the host to real mode must neither erase nor silently change the saved faux session.
+    const third = await start(false);
+    const real = await third.snapshot();
+    assert.equal(real.demo, false);
+    assert.equal(real.auth.connected, false);
+    assert.match(JSON.stringify(real.conversation.entries), /packaged fixture/);
+    assert.deepEqual(real.conversation.docs['pi.agent'].model, selected);
+    assert.ok(real.models.some(model => model.provider === 'openai'));
+    assert.equal((await fetch(third.url + '/auth.js')).status, 200);
+    third.child.kill('SIGTERM');
+    assert.equal(await third.exit, 0);
     current = null;
   },
 );

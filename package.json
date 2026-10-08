@@ -6,6 +6,7 @@
   "engines": { "node": ">=22.19.0" },
   "scripts": {
     "dev": "node runtime/main.ts --demo",
+    "start": "node runtime/main.ts",
     "test": "node --test test/*.test.mjs",
     "check": "tsc --noEmit"
   },

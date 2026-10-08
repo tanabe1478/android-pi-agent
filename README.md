@@ -2,7 +2,9 @@
 
 個人用のAndroidローカルPi環境。`pi-durable`を唯一のエージェントバックエンドにし、`pi-tui`の設計を参考に、タッチ・IME向けの操作画面を作ります。
 
-**チェックポイント2：共通ランタイムとAndroidホストを接続し、GalaxyでデモAPKの起動・WebView・ツール・保存／再開を確認。実モデル認証はまだ未実装です。**
+**チェックポイント3：新アプリ専用のChatGPT認証・自動更新・実モデル入口を接続。ホストのmocked OAuth／ブラウザ検証まで完了し、実機ログイン・実推論は未確認です。**
+
+前のデモAPKはGalaxyで起動・WebView・ツール・保存／再開を確認済みです。今回の実モデル版とは検証範囲を分けます。
 
 ```text
 Android向けUI（ブラウザとGalaxy WebViewで最小操作を検証）
@@ -20,7 +22,9 @@ SQLite / 明示的な作業ディレクトリ
 
 - Android foreground service、private assets展開、Node起動、認証付きWebView接続。別IDのデモAPKをGalaxyで確認
 - 端末のCodingToolsによるwrite/read/bash、会話保存、service停止／再開、idle owner kill後の復元を確認（fauxのscripted fixture）
-- fauxモデルによるローカルデモ（外部モデルAPI・ホストのPi認証は使わない）
+- ChatGPT OAuthの開始・外部ブラウザ・取消・5分timeout・手動callback fallback。認証済みのログイン表示を隠し、操作メニューから再認証
+- 新profile専用の0600認証ファイル、stable installation ID、pi-aiによる直列化したtoken refresh。旧アプリ／ホストPiの認証やambient API keyは使わない
+- fauxモデルによるローカルデモ（`--demo`。実認証ファイルや外部モデルAPIを使わない）
 - ストリーミング状態・思考・ツール結果の表示、生成中の入力保持
 - 送信、steering／follow-up、入力キュー取消、停止
 - モデル・思考レベル変更、会話作成・切替・命名・過去のユーザー入力からのfork
@@ -45,7 +49,7 @@ SQLite / 明示的な作業ディレクトリ
 
 ## ローカルデモ
 
-Node >=22.19.0。依存導入の承認後に：
+Node >=22.19.0。通常の依存導入はプロジェクトの継続承認内です：
 
 ```sh
 npm ci --ignore-scripts
@@ -57,6 +61,20 @@ npm run dev
 `.demo/session.sqlite`にデモ会話が保存されます。実際のAPI認証・GitHub PATは読みません。同じプロフィールを複数プロセスから同時に開く使い方は、この区切りでは未対応です。
 
 現在の検証では既にある参照側の依存を読み取り専用で借用しました。Android bundleはlockに沿ったproduction-onlyの配置で起動・保存・再起動をホスト検証しています。追加のパッケージ導入は行っていません。lockfileは既存のlockメタデータから必要な依存を抽出し、`npm ls --package-lock-only --all`で整合性を確認しています。クリーンな`npm ci`による再検証は未実施です。
+
+## ChatGPT認証／実モデル入口
+
+```sh
+npm start
+```
+
+`.android-pi/open.html`をprivateに開き、「ChatGPTログイン」→「ログインを開始」→「外部ブラウザで続ける」。認証後にPiへ戻り、モデルを選びます。`openai/gpt-6.1-sol`は新規profileの初期モデルです。catalogの全モデルがアカウントで使えるとは保証しません。
+
+認証は`pi-ai`の既存OpenAI OAuth／Models、実行は同じdurable Harnessです。認証前のモデル入力・compactionは拒否し、未送信draftを維持します。access／refresh token、callback URLは会話やAppViewへ入れません。OAuth URLと入力待ちは認証専用APIでだけ扱います。
+
+`.android-pi/auth.json`と`installation.json`はprivateです。共有・commitしないでください。認証失敗／取消で既存認証を消しません。保存済み認証があることと、期限切れtokenの更新や実推論が成功することは別です。logout UI、他provider、API-key入力はまだ未対応です。
+
+同じprofileを複数のデスクトッププロセスで同時に開かないでください。Androidはserviceのflockを使いますが、デスクトップのprocess lockは未実装です。
 
 ## 検証
 
@@ -73,8 +91,8 @@ Chrome指定時は360×780のデスクトップブラウザでもUIを検証し�
 - Galaxy SM-S931Z / ARM64を優先。`targetSdk 28`とTermux系のアプリ専用領域からの実行方式を維持
 - 一般配布・Play対応は要件にしない
 - 参照の`org.pimobile.app`とは別のアプリID・保存領域を使う。会話・認証の自動移行はしない
-- パッケージ導入、GitHubへの書き込み・push、APKインストール、Android設定変更には承認が必要
+- 通常のpackage setup・build/test・新アプリのデータ保持更新・このoriginへのpushは継続承認内。private dataの削除、旧アプリやAndroid設定の変更、upstreamへのpushは含めない
 
-新application IDは`io.github.tanabe1478.androidpi`、表示名は`Android Pi Demo`です。[Androidホスト・ビルド・保存領域・未検証範囲](docs/android.md)を参照してください。
+新application IDは`io.github.tanabe1478.androidpi`、今回の表示名は`Android Pi`です。[Androidホスト・ビルド・保存領域・未検証範囲](docs/android.md)を参照してください。
 
-デモAPKは端末へインストール済みです。旧アプリ・会話・認証は移行／変更していません。まだ実モデル付きPiが完成したとは扱いません。実IMEの日本語変換や実ツール途中のkillは未検証です。
+前のデモAPKは端末へインストール済みです。今回の実モデル版はADB未接続のためまだ更新していません。旧アプリ・会話・認証は移行／変更していません。実ログイン／推論、実IMEの日本語変換や実ツール途中のkillは未検証です。

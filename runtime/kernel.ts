@@ -47,6 +47,7 @@ export interface OpenOptions {
   shellPath?: string;
   settings?: HarnessSettings;
   demo?: boolean;
+  authorizeModel?: (provider: string) => void;
 }
 
 // Inspired by upstream experimental/durable's DurableView / DurableController.
@@ -240,6 +241,7 @@ export async function openKernel(options: OpenOptions): Promise<AppController> {
 
       const agent = await target.agent(ctx);
       if (!agent.model) throw new AppError('no_model', 'モデルが設定されていません。');
+      options.authorizeModel?.(agent.model.provider);
       const submitted = await target.submit(
         { type: 'input', content: translated.text, whenBusy: translated.mode },
         ctx,
@@ -326,6 +328,9 @@ export async function openKernel(options: OpenOptions): Promise<AppController> {
         return { kind: 'done' };
       }
       case 'compact': {
+        const agent = await target.agent(ctx);
+        if (!agent.model) throw new AppError('no_model', 'モデルが設定されていません。');
+        options.authorizeModel?.(agent.model.provider);
         const id = await target.compact(action.instructions, ctx);
         return { kind: 'accepted', operationId: id };
       }

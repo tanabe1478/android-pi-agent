@@ -80,7 +80,7 @@ public final class RuntimeService extends Service {
     try {
       RuntimePaths.initialize(this);
       if (!Arrays.asList(Build.SUPPORTED_ABIS).contains("arm64-v8a")) {
-        status("failed", "このデモAPKはARM64端末専用です。");
+        status("failed", "このAPKはARM64端末専用です。");
         return;
       }
       status("starting", "ローカルランタイムを準備しています…");
@@ -106,7 +106,7 @@ public final class RuntimeService extends Service {
           Thread.sleep(500);
           continue;
         }
-        status("running", "ローカルデモを起動しています…");
+        status("running", "ローカルランタイムを起動しています…");
         child.waitFor();
         if (!destroyed) {
           status("failed", "ランタイムが終了しました。再試行してください。");
@@ -152,7 +152,6 @@ public final class RuntimeService extends Service {
     command.add(new File(state, "runtime.lock").getAbsolutePath());
     command.add(node);
     command.add(new File(files, "app/runtime/main.ts").getAbsolutePath());
-    command.add("--demo");
     command.add("--bridge-file");
     command.add("--state");
     command.add(state.getAbsolutePath());
@@ -165,6 +164,7 @@ public final class RuntimeService extends Service {
 
     ProcessBuilder builder = new ProcessBuilder(command);
     Map<String, String> environment = builder.environment();
+    environment.clear();
     environment.put("HOME", home.getAbsolutePath());
     environment.put("PREFIX", prefix.getAbsolutePath());
     environment.put("TMPDIR", new File(files, "tmp").getAbsolutePath());
@@ -195,9 +195,9 @@ public final class RuntimeService extends Service {
     PendingIntent stop = PendingIntent.getService(this, 1,
         new Intent(this, RuntimeService.class).setAction(STOP), PendingIntent.FLAG_IMMUTABLE);
     Notification notification = new Notification.Builder(this, CHANNEL)
-        .setContentTitle("Android Pi Demo")
-        .setContentText(running ? "ローカルのdurableランタイムを実行中（模擬モデル）"
-            : "ランタイムは停止しています（模擬モデル）")
+        .setContentTitle("Android Pi")
+        .setContentText(running ? "ローカルのdurableランタイムを実行中"
+            : "ランタイムは停止しています")
         .setSmallIcon(android.R.drawable.ic_media_play)
         .setContentIntent(open)
         .setOngoing(true)

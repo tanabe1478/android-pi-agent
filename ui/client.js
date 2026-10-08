@@ -5,17 +5,29 @@ export class Client {
     this.abort = new AbortController();
   }
 
-  async action(action) {
-    const response = await fetch('/api/action', {
-      method: 'POST',
+  async request(url, action) {
+    const response = await fetch(url, {
+      method: action === undefined ? 'GET' : 'POST',
       headers: { 'content-type': 'application/json', 'x-pi-token': this.token },
-      body: JSON.stringify(action),
+      body: action === undefined ? undefined : JSON.stringify(action),
       signal: this.abort.signal,
     });
 
     const result = await response.json();
     if (!response.ok) throw new Error(result.message ?? '操作に失敗しました。');
     return result;
+  }
+
+  action(action) {
+    return this.request('/api/action', action);
+  }
+
+  auth(action) {
+    return this.request('/api/auth', action);
+  }
+
+  view() {
+    return this.request('/api/view');
   }
 
   async watch(onView, onConnection) {

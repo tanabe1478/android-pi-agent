@@ -18,6 +18,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONObject;
 
@@ -61,7 +62,19 @@ public final class MainActivity extends Activity {
       @Override
       public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
         Uri uri = request.getUrl();
-        // This checkpoint has no OAuth/browser feature. Only our exact bridge origin may navigate.
+        if (request.isForMainFrame() && request.hasGesture() && isChatGPTAuthorization(uri)) {
+          Intent browser = new Intent(Intent.ACTION_VIEW, uri);
+          browser.addCategory(Intent.CATEGORY_BROWSABLE);
+          try {
+            startActivity(browser);
+          } catch (android.content.ActivityNotFoundException | SecurityException ignored) {
+            Toast.makeText(MainActivity.this,
+                "外部ブラウザを開けません。ブラウザアプリを確認してください。",
+                Toast.LENGTH_LONG).show();
+          }
+          return true;
+        }
+        // Arbitrary remote, intent:, file: and OAuth callback navigations remain blocked.
         return loaded == null || !"http".equals(uri.getScheme())
             || !"127.0.0.1".equals(uri.getHost()) || uri.getPort() != loaded.port
             || uri.getUserInfo() != null;
@@ -79,12 +92,12 @@ public final class MainActivity extends Activity {
     startup.setGravity(Gravity.CENTER);
     startup.setPadding(24, 24, 24, 24);
     TextView title = new TextView(this);
-    title.setText("Android Pi Demo");
+    title.setText("Android Pi");
     title.setTextSize(24);
     title.setTextColor(Color.WHITE);
     startup.addView(title);
     status = new TextView(this);
-    status.setText("ローカルランタイムを準備しています…\n実モデルには接続しないデモです。");
+    status.setText("ローカルランタイムを準備しています…\n実モデルの利用にはChatGPT認証が必要です。");
     status.setTextColor(Color.LTGRAY);
     status.setPadding(0, 24, 0, 24);
     startup.addView(status);
@@ -100,6 +113,15 @@ public final class MainActivity extends Activity {
     setContentView(frame);
 
     startForegroundService(new Intent(this, RuntimeService.class));
+  }
+
+  private static boolean isChatGPTAuthorization(Uri uri) {
+    return "https".equals(uri.getScheme())
+        && "auth.openai.com".equals(uri.getHost())
+        && (uri.getPort() == -1 || uri.getPort() == 443)
+        && "/api/accounts/authorize".equals(uri.getEncodedPath())
+        && uri.getUserInfo() == null
+        && uri.getFragment() == null;
   }
 
   private void connectOrStatus() {
@@ -121,7 +143,7 @@ public final class MainActivity extends Activity {
     try {
       JSONObject value = new JSONObject(RuntimePaths.readSmall(
           new File(RuntimePaths.state(this), "status.json")));
-      status.setText(value.getString("message") + "\n実モデルには接続しないデモです。");
+      status.setText(value.getString("message"));
       boolean failed = "failed".equals(value.getString("stage"))
           || "stopped".equals(value.getString("stage"));
       retry.setEnabled(failed);

@@ -13,10 +13,18 @@ export interface ModelSummary extends ModelRef {
   thinkingLevels: readonly ModelThinkingLevel[];
 }
 
+export interface AuthSummary {
+  provider: 'openai';
+  connected: boolean;
+  status: 'idle' | 'pending' | 'done' | 'cancelled' | 'timeout' | 'error';
+  revision: number;
+}
+
 export interface AppView {
   instanceId: string;
   revision: number;
   demo: boolean;
+  auth?: AuthSummary;
   activeId: number;
   sessions: readonly SessionSummary[];
   models: readonly ModelSummary[];

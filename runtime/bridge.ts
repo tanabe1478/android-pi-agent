@@ -6,8 +6,14 @@ import { fileURLToPath } from 'node:url';
 
 import type { AppController, AppView } from './contracts.ts';
 import { AppError, parseAction } from './protocol.ts';
+import { parseAuthAction, type Authentication } from './auth.ts';
 
-export async function createBridge(controller: AppController, token: string, port = 0) {
+export async function createBridge(
+  controller: AppController,
+  token: string,
+  port = 0,
+  auth?: Authentication,
+) {
   const root = fileURLToPath(new URL('../', import.meta.url));
   const streams = new Set<http.ServerResponse>();
 
@@ -120,6 +126,14 @@ export async function createBridge(controller: AppController, token: string, por
         if (url.pathname === '/api/action' && request.method === 'POST')
           return json(response, 200, await controller.execute(parseAction(await body(request))));
 
+        if (url.pathname === '/api/auth' && auth) {
+          if (request.method === 'GET') return json(response, 200, auth.snapshot());
+          if (request.method === 'POST') {
+            auth.execute(parseAuthAction(await body(request)));
+            return json(response, 200, { kind: 'done' });
+          }
+        }
+
         if (url.pathname === '/api/events' && request.method === 'GET') {
           if (streams.size >= 8) return json(response, 429, { error: 'clients' });
           // Global invalidation is already subscribed. Register only after the initial
@@ -150,6 +164,7 @@ export async function createBridge(controller: AppController, token: string, por
         '/app.js': 'ui/app.js',
         '/components.js': 'ui/components.js',
         '/client.js': 'ui/client.js',
+        '/auth.js': 'ui/auth.js',
         '/style.css': 'ui/style.css',
         '/shared/commands.js': 'shared/commands.js',
       };

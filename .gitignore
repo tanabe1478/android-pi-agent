@@ -1,6 +1,12 @@
 node_modules
 .state/
 .demo/
+.android-pi/
+auth.json
+installation.json
+bridge.json
+status.json
+open.html
 *.sqlite
 *.sqlite-*
 *.db
