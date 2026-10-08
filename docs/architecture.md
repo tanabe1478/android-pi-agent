@@ -1,0 +1,61 @@
+# 設計：実行は一つ、表示は交換できる
+
+## 要件
+
+スマホの操作画面からPiの機能を利用できることが目的。別のPi CLIへ切り替えれば使える、という代替は全機能対応の判定に含めない。
+
+実行・モデル呼び出し・会話の所有者は`pi-durable`。UIの所有する状態は入力ドラフト、フォーカス、ダイアログ、展開状態、通信状態だけ。
+
+## Pi本体から参考にした境界
+
+Pi本体の手元のソース（commit `28dcce2ba`、パッケージ表記1.0.4）を調査した。
+
+- `packages/tui/src/index.ts` / `packages/tui/README.md`：Component、入力・focus、描画、コンテナ、選択UI、disposeの分離
+- `packages/coding-agent/src/experimental/durable/runtime.ts`：`DurableView`と`DurableController`。画面にはHarnessを渡さない
+- 同ディレクトリの`README.md`：画面は`Conversation.viewState()`を表示し、復旧を担当しない
+- `packages/coding-agent/src/experimental/services/`：`AgentController`、`Transcript`、`PresentationUI`などのサービス境界
+
+実験系はnpm向けの安定した全機能クライアントではなく、CLIとの互換性に未対応項目がある。本実装はそのソース全体をコピーしたり、1.0.4の内部APIを1.0.2へ直接持ち込んだりしない。最初は参照アプリで動いているdurable/ai/chord 1.0.2の公開APIを固定して利用する。
+
+## pi-tuiとAndroid UIの対応
+
+| pi-tuiの考え方 | このUI |
+| --- | --- |
+| Componentのrender/invalidate | Transcriptの更新、キー付きメッセージ部品 |
+| Editorと入力処理 | textareaとcomposer。表示更新時に作り直さない |
+| Focusable / IME | DOMのfocus、標準入力欄、isComposing中は送信キーを奪わない |
+| SelectList / overlay | HTML dialogと44px以上の選択ボタン |
+| 画面スクロールと追従 | 履歴だけがscroll。下端付近のときだけ新出力へ追従 |
+| stop / dispose | 通信のAbortController、購読解除、view mountのdispose |
+
+ANSI互換レンダラーを実装するのではない。TUI専用のカスタムComponentを返す既存拡張は、そのままDOMとして動くとは扱わない。
+
+## ランタイム
+
+`openKernel()`は一つのSQLite storage、一つのHarness、cwd別のNodeExecutionEnvを持つ。既存のCodingToolsを登録し、UIからモデル／ツールの実行ループを実装しない。
+
+会話一覧・名前・選択も同じSQLite内のsessionスコープ文書`android-pi.catalog`で管理する。別のJSONLセッションやsettingsコピーを状態の正本にしない。
+
+`AppView.conversation`はdurableの構造的なview。`pi.agent`、`pi.live`、`pi.inbox`、`pi.usage`を含む。今回はHTTP/SSEで完全なsnapshotを送る。大きな履歴のページングやexact-frame転送は将来の最適化であり、独自イベントreducerへ戻さない。
+
+すべての変更にはconversationIdが必要。画面を切り替える前に作られた操作が新しい会話に誤送信されない。最初のUIプロフィールは共有されたactiveIdを一つ持つ。複数クライアントが独立した選択を持つ機能はまだ作らない。
+
+通常の操作は入場処理だけを直列化する。モデルの応答全体をそのqueueで待たない。abortは別経路で実行し、入力キューと実行中の作業を止める。
+
+clearはidle時のみ。短命・一度限りの確認tokenをconversationIdと文脈のstampに結びつける。文脈やモデルが変われば再確認する。確認tokenはプロセス再起動で無効になる。
+
+## 通信とプライバシー
+
+- IPv4 loopbackのみでlisten。HostとOriginを検査
+- 接続tokenはheader。URLのqueryでは認証しない
+- UI静的ファイルだけをallowlistで配信。runtimeや保存ファイルを配信しない
+- スクリプト・表示はsame-origin。モデルやツールのテキストをinnerHTMLにしない
+- 遅いSSE接続は切断してsnapshotから再接続。受理された操作は自動再送しない
+- 一般エラーには生のstackやprovider payloadを返さない
+- 個人用stateDirは0700、SQLiteと起動リンクは0600
+
+この認証は外部サイト／別アプリからの誤アクセスを防ぐためのもの。同じapp UIDで動くtrusted shell・拡張からの隔離ではない。実プロバイダー認証、権限UI、profileのプロセスロック、データ移行は未実装。
+
+## Android
+
+targetSdk 28の既存の実行方式を維持する。最新targetSdk／Play対応を先行課題にしない。新しいアプリIDとデータ領域を使い、参照アプリを上書き・初期化しない。実機未接続のため、この区切りで確認したのはホストのみ。

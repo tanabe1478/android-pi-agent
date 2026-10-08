@@ -1,0 +1,22 @@
+{
+  "name": "android-pi-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.19.0" },
+  "scripts": {
+    "dev": "node runtime/main.ts --demo",
+    "test": "node --test test/*.test.mjs",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@earendil-works/chord": "1.0.2",
+    "@earendil-works/pi-ai": "1.0.2",
+    "@earendil-works/pi-durable": "1.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.4",
+    "playwright-core": "1.63.0",
+    "typescript": "5.9.3"
+  }
+}

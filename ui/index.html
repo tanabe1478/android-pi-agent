@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Android Pi Agent</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <main id="app">
+    <header>
+      <strong>Android Pi</strong>
+      <button id="sessions" type="button">会話</button>
+      <button id="models" type="button">モデル</button>
+      <button id="thinking" type="button">思考</button>
+    </header>
+    <div id="mode-banner" hidden>ローカルデモ — モデルAPIへは接続していません</div>
+    <div id="workspace"></div>
+    <section id="transcript" aria-label="会話履歴" tabindex="0"></section>
+    <div id="status" role="status" aria-live="polite">接続しています…</div>
+    <div id="queue" aria-label="入力キュー"></div>
+    <form id="composer">
+      <div id="suggestions" aria-label="コマンド候補" hidden></div>
+      <label class="sr-only" for="message">メッセージ</label>
+      <textarea id="message" rows="3" placeholder="依頼を入力。/ で操作を選択" disabled></textarea>
+      <div class="actions">
+        <label for="input-mode">実行中の入力</label>
+        <select id="input-mode"><option value="steer">割込み</option><option value="followUp">後で実行</option></select>
+        <button id="menu" type="button">操作</button>
+        <button id="abort" type="button" disabled>停止</button>
+        <button id="send" type="submit" disabled>送信</button>
+      </div>
+    </form>
+    <dialog id="dialog"><h2 id="dialog-title"></h2><div id="dialog-body"></div><button id="dialog-close" type="button">閉じる</button></dialog>
+  </main>
+</body>
+</html>

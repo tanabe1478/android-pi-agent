@@ -1,0 +1,56 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { fauxAssistantMessage, fauxText } from '@earendil-works/pi-ai';
+import { createBridge } from '../runtime/bridge.ts';
+import { fixture } from './helpers.mjs';
+
+test('mobile presentation completes commands, preserves the IME draft during streaming and confirms scoped clear', { skip: !process.env.PI_TEST_CHROME }, async t => {
+  const f = await fixture(t, { tokensPerSecond: 100 });
+  f.faux.setResponses([fauxAssistantMessage([fauxText('streaming fixture response '.repeat(8))])]);
+  const token = 'browser-fixture-token';
+  const bridge = await createBridge(f.kernel, token);
+  const { chromium } = await import('playwright-core');
+  const browser = await chromium.launch({ executablePath: process.env.PI_TEST_CHROME, headless: true });
+  try {
+    const page = await browser.newPage({ viewport: { width: 360, height: 780 } });
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.goto(bridge.url + '/#token=' + token);
+    const editor = page.getByRole('textbox', { name: 'メッセージ' });
+    await editor.waitFor();
+    await page.waitForFunction(() => !document.getElementById('message').disabled);
+    assert.equal(new URL(page.url()).hash, '');
+    await editor.fill('/mo');
+    await page.getByRole('button', { name: '/model', exact: true }).click();
+    assert.equal(await editor.inputValue(), '/model ');
+    await editor.fill('fixture prompt');
+    await page.getByRole('button', { name: '送信', exact: true }).click();
+    await page.waitForFunction(() => !document.getElementById('send').disabled && document.getElementById('message').value === '');
+    await editor.fill('日本語の入力中 👩‍💻');
+    await editor.focus();
+    await page.waitForFunction(() => document.getElementById('transcript').textContent.includes('streaming fixture response'));
+    assert.equal(await editor.inputValue(), '日本語の入力中 👩‍💻');
+    assert.equal(await editor.evaluate(node => document.activeElement === node), true);
+    await page.waitForFunction(() => document.getElementById('abort').disabled);
+    const beforeCalls = f.faux.state.callCount;
+    await editor.fill('/not-supported');
+    await page.getByRole('button', { name: '送信', exact: true }).click();
+    await page.getByRole('status').filter({ hasText: '未対応のコマンド' }).waitFor();
+    assert.equal(f.faux.state.callCount, beforeCalls);
+    await editor.fill('/clear');
+    await page.getByRole('button', { name: '送信', exact: true }).click();
+    await page.getByRole('heading', { name: '操作を確認' }).waitFor();
+    await page.getByRole('button', { name: '閉じる', exact: true }).click();
+    assert.ok((await page.locator('#transcript').textContent()).includes('fixture prompt'));
+    await editor.fill('/clear');
+    await page.getByRole('button', { name: '送信', exact: true }).click();
+    await page.getByRole('button', { name: 'リセットする', exact: true }).click();
+    await page.waitForFunction(() => !document.getElementById('transcript').textContent.includes('fixture prompt'));
+    await page.locator('#sessions').click();
+    await page.getByRole('button', { name: '新しい会話', exact: true }).click();
+    await page.waitForFunction(() => document.getElementById('sessions').textContent === 'New session');
+    const layout = await page.evaluate(() => ({ width: innerWidth, scroll: document.documentElement.scrollWidth }));
+    assert.ok(layout.scroll <= layout.width);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); await bridge.close(); }
+});
