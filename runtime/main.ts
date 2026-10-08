@@ -7,6 +7,7 @@ import { createModels, fauxAssistantMessage, fauxProvider, fauxText } from '@ear
 
 import { openKernel } from './kernel.ts';
 import { createBridge } from './bridge.ts';
+import { parentPid, publishBridge, removeBridge, watchParent } from './host-channel.ts';
 
 const { values } = parseArgs({
   options: {
@@ -14,6 +15,9 @@ const { values } = parseArgs({
     state: { type: 'string', default: '.demo' },
     workspace: { type: 'string', default: process.cwd() },
     port: { type: 'string', default: '0' },
+    shell: { type: 'string' },
+    'bridge-file': { type: 'boolean', default: false },
+    'parent-pid': { type: 'string' },
   },
 });
 
@@ -25,6 +29,7 @@ if (!values.demo)
 const port = Number(values.port);
 if (!Number.isSafeInteger(port) || port < 0 || port > 65535) throw new Error('Invalid port.');
 
+const ownerPid = parentPid(values['parent-pid']);
 const stateDir = path.resolve(values.state!);
 await mkdir(stateDir, { recursive: true, mode: 0o700 });
 
@@ -47,6 +52,7 @@ const kernel = await openKernel({
   workspace: values.workspace!,
   models,
   demo: true,
+  shellPath: values.shell,
   initialModel: { provider: model.provider, modelId: model.id },
 });
 
@@ -69,12 +75,40 @@ await writeFile(
 console.log(`Local demo ready. Open the private launcher: ${launcher}`);
 
 let stopping = false;
+let unwatchParent: (() => void) | undefined;
+
 async function stop() {
   if (stopping) return;
   stopping = true;
-  await bridge!.close();
-  await kernel.close();
+  unwatchParent?.();
+
+  try {
+    if (values['bridge-file']) await removeBridge(stateDir, token);
+  } finally {
+    try {
+      await bridge!.close();
+    } finally {
+      await kernel.close();
+    }
+  }
 }
 
-process.once('SIGINT', () => void stop());
-process.once('SIGTERM', () => void stop());
+const requestStop = () => {
+  void stop().catch(() => {
+    process.exitCode = 1;
+  });
+};
+process.once('SIGINT', requestStop);
+process.once('SIGTERM', requestStop);
+
+try {
+  if (ownerPid !== undefined) unwatchParent = watchParent(ownerPid, requestStop);
+  if (values['bridge-file']) {
+    await publishBridge(stateDir, { port: bridge.port, token, parentPid: ownerPid });
+    // A signal during publication must not resurrect readiness after shutdown.
+    if (stopping) await removeBridge(stateDir, token);
+  }
+} catch (error) {
+  await stop();
+  throw error;
+}

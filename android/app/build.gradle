@@ -1,0 +1,48 @@
+plugins {
+  id 'com.android.application'
+}
+
+android {
+  namespace 'io.github.tanabe1478.androidpi'
+  compileSdk 35
+
+  defaultConfig {
+    applicationId 'io.github.tanabe1478.androidpi'
+    minSdk 26
+    // Personal use: retain direct execution of app-private Termux binaries.
+    targetSdk 28
+    versionCode 1
+    versionName '0.2.0-demo'
+    ndk {
+      abiFilters 'arm64-v8a'
+    }
+  }
+
+  buildFeatures {
+    buildConfig true
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_11
+    targetCompatibility JavaVersion.VERSION_11
+  }
+
+  androidResources {
+    noCompress += ['bin']
+  }
+}
+
+// Do not produce an apparently working APK without its private runtime bundle.
+tasks.register('verifyRuntimeAssets') {
+  doLast {
+    ['rootfs.bin', 'runtime.bin', 'bundle.json'].each { name ->
+      if (!file("src/main/assets/${name}").isFile()) {
+        throw new GradleException('Package local runtime assets first: scripts/package-android.py')
+      }
+    }
+  }
+}
+
+tasks.named('preBuild').configure {
+  dependsOn 'verifyRuntimeAssets'
+}

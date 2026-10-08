@@ -2,10 +2,10 @@
 
 個人用のAndroidローカルPi環境。`pi-durable`を唯一のエージェントバックエンドにし、`pi-tui`の設計を参考に、タッチ・IME向けの操作画面を作ります。
 
-**チェックポイント1：ホストで動く共通ランタイムと最小UI。Androidアプリ・実モデル認証はまだ未実装です。**
+**チェックポイント2：共通ランタイムと最小UIに、Androidホストを接続。デモAPKのビルドまで成功。実機動作・実モデル認証はまだ未検証／未実装です。**
 
 ```text
-Android向けUI（現在はブラウザで検証）
+Android向けUI（ブラウザ検証済み、WebView実機確認はこれから）
     ↕ AppView / Action
 認証付きloopback HTTP・SSE
     ↕ AppController
@@ -18,6 +18,7 @@ SQLite / 明示的な作業ディレクトリ
 
 ## この区切りでできること
 
+- Android foreground service、private assets展開、Node起動、認証付きWebView接続。別IDのデモAPKをビルド（まだ実機未検証）
 - fauxモデルによるローカルデモ（外部モデルAPI・ホストのPi認証は使わない）
 - ストリーミング状態・思考・ツール結果の表示、生成中の入力保持
 - 送信、steering／follow-up、入力キュー取消、停止
@@ -54,7 +55,7 @@ npm run dev
 
 `.demo/session.sqlite`にデモ会話が保存されます。実際のAPI認証・GitHub PATは読みません。同じプロフィールを複数プロセスから同時に開く使い方は、この区切りでは未対応です。
 
-現在の検証では既にある参照側の依存を読み取り専用で借用しました。追加のパッケージ導入は行っていません。lockfileは既存のlockメタデータから必要な依存を抽出し、`npm ls --package-lock-only --all`で整合性を確認しています。クリーンな`npm ci`による再検証は未実施です。
+現在の検証では既にある参照側の依存を読み取り専用で借用しました。Android bundleはlockに沿ったproduction-onlyの配置で起動・保存・再起動をホスト検証しています。追加のパッケージ導入は行っていません。lockfileは既存のlockメタデータから必要な依存を抽出し、`npm ls --package-lock-only --all`で整合性を確認しています。クリーンな`npm ci`による再検証は未実施です。
 
 ## 検証
 
@@ -73,4 +74,6 @@ Chrome指定時は360×780のデスクトップブラウザでもUIを検証し�
 - 参照の`org.pimobile.app`とは別のアプリID・保存領域を使う。会話・認証の自動移行はしない
 - パッケージ導入、GitHubへの書き込み・push、APKインストール、Android設定変更には承認が必要
 
-この区切りにはAPK・Java/Kotlinブートストラップは含みません。次にこの共通APIをAndroidのホストとつなぎます。
+新application IDは`io.github.tanabe1478.androidpi`、表示名は`Android Pi Demo`です。[Androidホスト・ビルド・保存領域・未検証範囲](docs/android.md)を参照してください。
+
+APKインストールは承認待ちです。まだ端末で使える実モデル付きPiが完成したとは扱いません。

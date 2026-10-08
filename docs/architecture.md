@@ -54,8 +54,12 @@ clearはidle時のみ。短命・一度限りの確認tokenをconversationIdと�
 - 一般エラーには生のstackやprovider payloadを返さない
 - 個人用stateDirは0700、SQLiteと起動リンクは0600
 
-この認証は外部サイト／別アプリからの誤アクセスを防ぐためのもの。同じapp UIDで動くtrusted shell・拡張からの隔離ではない。実プロバイダー認証、権限UI、profileのプロセスロック、データ移行は未実装。
+この認証は外部サイト／別アプリからの誤アクセスを防ぐためのもの。同じapp UIDで動くtrusted shell・拡張からの隔離ではない。実プロバイダー認証、権限UI、データ移行は未実装。AndroidではflockでNodeプロセス全体にprofileの排他を持たせる。デスクトップ起動口の複数プロセス排他は未対応。
 
 ## Android
 
-targetSdk 28の既存の実行方式を維持する。最新targetSdk／Play対応を先行課題にしない。新しいアプリIDとデータ領域を使い、参照アプリを上書き・初期化しない。実機未接続のため、この区切りで確認したのはホストのみ。
+targetSdk 28の既存の実行方式を維持する。最新targetSdk／Play対応を先行課題にしない。`io.github.tanabe1478.androidpi`という別アプリIDとデータ領域を使い、参照アプリを上書き・初期化しない。
+
+foreground serviceがassetsをprivate stagingへ展開し、flockを保持してNodeへexecする。Activityはprivate ready recordから接続し、UIとkernelのAPIは同じまま使う。`usr/`の初回baselineと更新できる`app/`を分け、home・workspace・SQLiteを保持する。
+
+APKビルドは成功。実機インストール・WebView／IME・AndroidのNode/bashは未検証。詳細は[Androidホスト](android.md)。
