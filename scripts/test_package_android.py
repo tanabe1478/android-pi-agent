@@ -88,7 +88,11 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(first, second)
 
         with tarfile.open(self.root / "first/runtime.bin") as archive:
-            names = archive.getnames()
+            members = archive.getmembers()
+            self.assertEqual(members[0].name, "app")
+            self.assertTrue(members[0].isdir())
+            self.assertEqual(members[0].mode, 0o700)
+            names = [member.name for member in members[1:]]
             self.assertTrue(all(name.startswith("app/") for name in names))
             self.assertFalse(any("dev-only" in name or "auth.json" in name or "host-tool" in name for name in names))
             self.assertIn("app/node_modules/fixture/node_modules/child/index.js", names)

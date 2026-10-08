@@ -193,6 +193,12 @@ def build(root, rootfs, output):
             filename="", fileobj=stream, mode="wb", mtime=0
         ) as compressed:
             with tarfile.open(fileobj=compressed, mode="w", format=tarfile.USTAR_FORMAT) as archive:
+                # Android toybox --restrict treats the first archive entry as its allowed root.
+                application = tarfile.TarInfo("app")
+                application.type = tarfile.DIRTYPE
+                application.mode = 0o700
+                archive.addfile(application)
+
                 for file in SOURCE_FILES:
                     add_file(archive, root / file, "app/" + file)
                 for package in packages:
