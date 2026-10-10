@@ -203,6 +203,56 @@ test(
 );
 
 test(
+  'tool images use bounded raster data URLs only and fit a narrow expanded row',
+  {
+    skip: !process.env.PI_TEST_CHROME,
+  },
+  async t => {
+    const { page } = await browserFixture(t);
+    const png =
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==';
+    const view = viewOf([
+      entry(1, { role: 'assistant', content: [call] }),
+      entry(2, {
+        ...response,
+        content: [
+          { type: 'image', mimeType: 'image/png', data: png },
+          { type: 'image', mimeType: 'image/svg+xml', data: 'PHN2Zz4=' },
+          { type: 'image', mimeType: 'image/png', data: 'https://example.com/private' },
+          { type: 'image', mimeType: 'image/png', data: '\" onerror=\"alert(1)' },
+        ],
+      }),
+    ]);
+    const result = await page.evaluate(async view => {
+      const { Transcript } = await import('/components.js');
+      const node = document.createElement('section');
+      document.body.append(node);
+      const transcript = new Transcript(node, () => {});
+      transcript.render(view);
+      const note = node.querySelector('.tool-preview').textContent;
+      transcript.toggleTools();
+      const result = {
+        images: node.querySelectorAll('img').length,
+        dataOnly: node.querySelector('img').src.startsWith('data:image/png;base64,'),
+        note,
+        overflow: document.documentElement.scrollWidth > innerWidth,
+        waiting: node.textContent.includes('出力を待っています'),
+      };
+      transcript.dispose();
+      node.remove();
+      return result;
+    }, view);
+    assert.deepEqual(result, {
+      images: 1,
+      dataOnly: true,
+      note: '画像 1枚 · 展開して表示',
+      overflow: false,
+      waiting: false,
+    });
+  },
+);
+
+test(
   'Pi-like footer stays below the editor, shortcuts preserve drafts, and narrow keyboard layouts fit',
   { skip: !process.env.PI_TEST_CHROME },
   async t => {

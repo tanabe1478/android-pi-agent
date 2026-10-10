@@ -19,6 +19,10 @@ test(
     await mkdir(workspace);
     execFileSync('tar', ['xzf', path.resolve(bundle), '-C', root]);
     for (const file of [
+      'runtime/browser-preview.ts',
+      'runtime/browser-cdp.ts',
+      'runtime/browser-cli.ts',
+      'runtime/image-read.ts',
       'runtime/github.ts',
       'runtime/cli.ts',
       'runtime/packages.ts',
@@ -37,7 +41,7 @@ test(
       [
         '--input-type=module',
         '-e',
-        "await import('@earendil-works/pi-ai/api/openai-responses'); console.log('TEST_SDK_LOAD_OK');",
+        "await import('@earendil-works/pi-ai/api/openai-responses'); await import('playwright-core'); await import('ws'); console.log('TEST_SDK_LOAD_OK');",
       ],
       { cwd: path.join(root, 'app'), encoding: 'utf8' },
     );

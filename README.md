@@ -2,9 +2,9 @@
 
 個人用のAndroidローカルPi環境。`pi-durable`を唯一のエージェントバックエンドにし、`pi-tui`の設計を参考に、タッチ・IME向けの操作画面を作ります。
 
-**チェックポイント5：新profile専用GitHub PAT、標準git／ghへの接続、追加専用のpi-pkgを実装。61テストとAPK `0.5.1-cli`のoffline buildが成功し、Galaxyへデータ保持で更新済み。実GitHub認証、gh追加、private repositoryへのHTTPS git接続を確認しました。**
+**チェックポイント6：別process／WebView storageのpreview、標準pi-browser CLI、既存readの画像対応を追加。72テストとoffline APK buildが成功し、Galaxyへ`0.6.0-preview`をデータ保持で更新済み。端末のpreview操作は画面ロック中のため未検証です。**
 
-前の`0.4.0-ui`で、Pi型UIの基本操作・ツール展開・実keyboard resizeを確認しています。さらに前の区切りでChatGPTログイン、`openai/gpt-6.1-sol`の実推論、実モデルが選ぶwrite/read/bash、service再起動後の復元を確認しました。今回のCLI検証は新しいモデル入力を送らずに実施し、実モデルの自律CLI選択、期限切れcredentialの実refresh・Pi全機能互換とは区別します。
+前の`0.4.0-ui`で、Pi型UIの基本操作・ツール展開・実keyboard resizeを確認しています。さらに前の区切りでChatGPTログイン、`openai/gpt-6.1-sol`の実推論、実モデルが選ぶwrite/read/bash、service再起動後の復元を確認しました。前のチェックポイント5で実GitHub認証・gh追加・private git HTTPSも確認済みです。今回の更新確認は新しいモデル入力を送らず、実モデルの自律browser選択、vision推論、期限切れcredentialの実refresh・Pi全機能互換とは区別します。
 
 ```text
 Android向けUI（ブラウザとGalaxy WebViewで最小操作を検証）
@@ -20,7 +20,7 @@ SQLite / 明示的な作業ディレクトリ
 
 ## この区切りでできること
 
-- Android foreground service、private assets展開、Node起動、認証付きWebView接続。別IDの`0.5.1-cli` APKをGalaxyへデータ保持で更新
+- Android foreground service、private assets展開、Node起動、認証付きWebView接続。別IDの`0.6.0-preview` APKをGalaxyへデータ保持で更新
 - 端末のCodingToolsによるwrite/read/bash、会話保存、service停止／再開、idle owner kill後の復元を確認（fauxのscripted fixture）
 - ChatGPT OAuthの開始・外部ブラウザ・取消・5分timeout・手動callback fallback。認証済みのログイン表示を隠し、操作メニューから再認証
 - 実機でChromeへの遷移とユーザーのChatGPTログイン、実モデルの短い応答、回答中の日本語＋emoji draft／focus保持を確認
@@ -28,6 +28,8 @@ SQLite / 明示的な作業ディレクトリ
 - 新profile専用の0600認証ファイル、stable installation ID、pi-aiによる直列化したtoken refresh。旧アプリ／ホストPiの認証やambient API keyは使わない
 - `/github`／操作メニューからPATを専用masked欄へ入力。GitHubで検証して保存し、失敗時は既存PATを保持。解除は確認付き。PATを会話やAppViewへ出さない。Galaxyで新profileへの実保存と認証管理UIを確認
 - CodingToolsのshell環境に標準gitのHTTPS askpass、private `gh`／`pi-pkg` launcherを接続。usrの既存binaryを移動・上書きせず、必要なCLIだけ追加。Galaxyでgh 2.102.0の追加、20 repositoriesの一覧（うち4 private）、private git ls-remoteを確認
+- 分離したlocal project previewと`pi-browser open/status/snapshot/screenshot/run`。CLI-firstのCDP接続で、別のPi CLIやbrowserを起動しない。desktop Chrome確認、実機の操作は未検証
+- 既存readのPNG／JPEG／WebP画像対応（8 MiBまで）とsafeな画像tool表示。host／faux確認、実vision推論は未検証。[境界と検証](docs/browser.md)
 - fauxモデルによるローカルデモ（`--demo`。実認証ファイルや外部モデルAPIを使わない）
 - Pi型のフラットなMarkdown本文、思考表示、call/resultをまとめたツール表示と展開保持。下部にエディタとcwd／session／model／thinking／累積usage
 - ストリーミング状態・思考・ツール結果の表示、生成中の入力保持。Enterは改行、送信button／Ctrl+Enterを使用。スマホ向けの違いは[UI方針](docs/ui.md)
@@ -96,6 +98,10 @@ gh repo list --limit 20
 
 `git`は同じPATをHTTPS認証に使います。`gh`は追加後に新profileのラッパーを経由します。`pi-pkg`はbaseline／既存filesを置換しない追加専用で、apt互換ではありません。Galaxyで実保存・通信・CLI追加を確認済みです。Termuxの固定pathにはGIT_EXEC_PATH／GIT_SSL_CAINFOを新prefixへ設定して対応しました。[認証・CLIの境界と検証](docs/cli.md)を参照してください。
 
+## local Web preview
+
+Androidのbashからproject serverを起動し、`pi-browser open http://127.0.0.1:7420/`を一度実行します。Pi／Previewを前面にし、`status`、`snapshot`、`screenshot FILE.png`、`run SCRIPT.mjs`で検証します。Pi bridgeやOAuth portには接続しません。公開fixtureだけを撮影し、画像はreadへ渡せます。[使い方と未検証範囲](docs/browser.md)。
+
 ## 検証
 
 ```sh
@@ -115,4 +121,4 @@ Chrome指定時は360×780のデスクトップブラウザでもUIを検証し�
 
 新application IDは`io.github.tanabe1478.androidpi`、今回の表示名は`Android Pi`です。[Androidホスト・ビルド・保存領域・未検証範囲](docs/android.md)を参照してください。
 
-`0.5.1-cli`へ更新済みで、更新前後でChatGPT／GitHub認証、追加gh、選択・6会話・16エントリを保持し、確定entry比較も一致しました。Pi型UIのkeyboard配置は前の区切りで確認済みです。ユーザーの明示依頼により旧`org.pimobile.app`を端末のuser 0から削除しましたが、旧データ／認証の移行はせず、Macの参照リポジトリは保持しています。実IME変換、実ツール途中のkill、長時間backgroundなどは未検証です。
+`0.6.0-preview`へ更新済みで、更新前後でChatGPT／GitHub認証、追加gh、選択・6会話・19エントリを保持し、確定entry比較も一致しました。更新後のpreview UI操作は画面ロック中のため保留しています。Pi型UIのkeyboard配置は前の区切りで確認済みです。ユーザーの明示依頼により旧`org.pimobile.app`を端末のuser 0から削除しましたが、旧データ／認証の移行はせず、Macの参照リポジトリは保持しています。実IME変換、実ツール途中のkill、長時間backgroundなどは未検証です。

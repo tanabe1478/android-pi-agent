@@ -82,6 +82,10 @@ final class RuntimePaths {
   }
 
   static Connection connection(Context context) {
+    return connection(context, android.os.Process.myPid());
+  }
+
+  static Connection connection(Context context, int ownerPid) {
     try {
       JSONObject value = new JSONObject(readSmall(new File(state(context), "bridge.json")));
       int port = value.getInt("port");
@@ -90,7 +94,7 @@ final class RuntimePaths {
       String token = value.getString("token");
 
       if (value.getInt("version") != 1 || port < 1 || port > 65535 || pid < 1
-          || parent != android.os.Process.myPid() || !token.matches("[A-Za-z0-9_-]{43}")
+          || ownerPid < 1 || parent != ownerPid || !token.matches("[A-Za-z0-9_-]{43}")
           || !alive(pid)) {
         return null;
       }

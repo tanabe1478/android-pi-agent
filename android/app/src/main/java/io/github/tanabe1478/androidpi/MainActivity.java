@@ -39,6 +39,7 @@ public final class MainActivity extends Activity {
     public void run() {
       if (!resumed) return;
       connectOrStatus();
+      if (loaded != null) PreviewRequests.poll(MainActivity.this, null, android.os.Process.myPid());
       handler.postDelayed(this, 500);
     }
   };

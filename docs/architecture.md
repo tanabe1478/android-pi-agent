@@ -74,6 +74,12 @@ GitHubもprofileサービスで、会話やagent backendではありません。
 
 Android serviceが明示するprefixを、CodingToolsのNodeExecutionEnv.shellEnvへ渡します。Gitのcompiled Termux pathにはGIT_EXEC_PATH／GIT_SSL_CAINFOを新prefixへ設定し、TLS検証を維持します。pi-pkgは別のmodel loopを持たない標準CLIで、native baseline receiptと照合した追加registryを持ちます。APK更新と同じくusrの既存filesを保護し、maintainer scriptsやbaseline更新は実行しません。詳細は[CLIの境界](cli.md)。
 
+## 分離previewと画像read
+
+Previewは会話・モデル状態を所有しないprofileサービスです。private requestを前面のnative Activityが一度だけ消費し、owner／runtime PIDへ結びつけます。:previewプロセスとWebView data directoryを分け、そのsocketだけを既存header／Host／Origin認証付きCDP proxyで接続します。Pi／OAuth portやremote resourcesは許可しません。pi-browserは同じCodingToolsのshell環境から呼ぶCLIで、PlaywrightはCDP attachment専用です。
+
+画像はCodingToolsのreadをdurable wrapToolでdecorateし、同じExecutionEnvとSQLiteへimage contentを返します。専用vision agentや別のtool loopではありません。UIはbounded raster data URLだけを展開内に表示します。trusted同一UID／CDP scriptをsandboxする構成ではないことと、[host／実機の検証差](browser.md)を区別します。
+
 ## Piを基本にする表示
 
 画面は通常Piの配置・操作感を基本にし、mobileで難しい部分だけ変更する。

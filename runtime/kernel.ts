@@ -26,6 +26,7 @@ import { openNodeSqliteStorage } from '@earendil-works/pi-durable/storage/sqlite
 import { COMMANDS, parseInput } from '../shared/commands.js';
 import type { Action, ActionResult, AppController, AppView } from './contracts.ts';
 import { AppError, parseAction } from './protocol.ts';
+import { imageReadWrap } from './image-read.ts';
 
 const ctx = BACKGROUND_CONTEXT;
 
@@ -64,6 +65,7 @@ export async function openKernel(options: OpenOptions): Promise<AppController> {
   const envs = new Map<string, NodeExecutionEnv>();
   const registry = createRegistry();
   registry.install(CodingTools);
+  registry.install(defineExtension({ name: 'android-pi-images', wraps: [imageReadWrap()] }));
   registry.install(
     defineExtension({
       name: 'android-pi-context',
@@ -73,7 +75,7 @@ export async function openKernel(options: OpenOptions): Promise<AppController> {
           () =>
             'Use the supplied coding tools and standard CLIs in the explicit workspace. Ask before installing packages, remote writes or pushes. Never read or display credentials. Android tools run within the app sandbox, not as root. Do not claim access to other apps or device settings.' +
             (options.shellEnv?.PI_ANDROID_STATE
-              ? ' Android CLI setup: pi-pkg list; pi-pkg plan PACKAGE; pi-pkg install PACKAGE --yes. Honor existing owner authorization, otherwise ask before installation. gh uses the app-owned GitHub PAT after installation. If authentication is unavailable, ask the owner to configure it in the GitHub dialog; never inspect credentials, dump the environment, run gh auth token or put a token into a command.'
+              ? ' Android CLI setup: pi-pkg list; pi-pkg plan PACKAGE; pi-pkg install PACKAGE --yes. Honor existing owner authorization, otherwise ask before installation. gh uses the app-owned GitHub PAT after installation. If authentication is unavailable, ask the owner to configure it in the GitHub dialog; never inspect credentials, dump the environment, run gh auth token or put a token into a command. For local web verification use pi-browser open http://127.0.0.1:PORT/ then status, snapshot, screenshot FILE.png, or run SCRIPT.mjs (default export async ({page, browser, chromium})). Preview is a separate foreground-only WebView, not the Pi/auth page. Use read for public fixture images. Never capture private pages or input values without permission. After a lost response, read state instead of repeating an action.'
               : ''),
         ),
       ],

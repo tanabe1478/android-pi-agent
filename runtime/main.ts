@@ -19,6 +19,7 @@ import { parentPid, publishBridge, removeBridge, watchParent } from './host-chan
 import { openAuthentication, withAuthentication, type Authentication } from './auth.ts';
 import { openGitHub, withGitHub, type GitHubAuthentication } from './github.ts';
 import { installGitTools } from './cli.ts';
+import { createPreview } from './browser-preview.ts';
 
 const { values } = parseArgs({
   options: {
@@ -95,9 +96,13 @@ const authenticated = auth ? withAuthentication(kernel, auth) : kernel;
 const controller = github ? withGitHub(authenticated, github) : authenticated;
 
 const token = randomBytes(32).toString('base64url');
+const preview =
+  !values.demo && values.prefix && ownerPid !== undefined
+    ? createPreview(stateDir, ownerPid)
+    : undefined;
 let bridge;
 try {
-  bridge = await createBridge(controller, token, port, auth, github);
+  bridge = await createBridge(controller, token, port, auth, github, preview);
 } catch (error) {
   await controller.close();
   throw error;
@@ -124,6 +129,7 @@ async function stop() {
 
   try {
     if (values['bridge-file']) await removeBridge(stateDir, token);
+    preview?.close();
     await github?.close();
     await auth?.close();
   } finally {

@@ -1,4 +1,8 @@
-# Androidホスト（チェックポイント5）
+# Androidホスト（チェックポイント6）
+
+`0.6.0-preview`（versionCode 6）のoffline APK build、66 Node／browser／bundle＋6 Python＝72 testsが成功し、Galaxyへ更新済み。idle／空draft／package lockなしを確認してgraceful stop／adb install -rを実施。6会話・19エントリ、確定entry digest、選択・model／thinking、ChatGPT／GitHub認証、追加gh／CLI registryとcore digestsを保持しました。**端末は画面ロック中で、更新後UI／previewの操作は未検証**。UI CDP timeoutで再更新・入力再送をせず、API／read-only SQLiteの保持を確認しています。[分離preview／画像read](browser.md)を参照。
+
+## 前のGitHub／CLI実機検証
 
 `0.5.1-cli`（versionCode 5）のoffline APK buildが成功し、Galaxyへデータ保持で更新済み。GitHub profile認証、git／gh、pi-pkgを追加し、実PAT保存、gh 2.102.0追加、private GitHubのread-only利用を確認しました。host検証は55 Node／browser／bundle＋6 Python＝61件、failure／skipなし。host依存・native baselineは参照側から読み取り専用で利用し、端末のghだけpi-pkgで取得しました。[CLIの検証範囲](cli.md)を参照してください。
 
@@ -34,17 +38,19 @@ home/.android-pi/
   github.json           checkpoint5の新profile専用PAT。0600、会話／AppViewへ出さない
   packages.json         checkpoint5の追加CLI registry。baseline／旧アプリとは独立
   package-install.lock  追加installerの排他。中断時は自動解除せず要確認
-  bin/                  checkpoint5のmanaged git askpass／gh／pi-pkg launcher
+  bin/                  managed git askpass／gh／pi-pkg／pi-browser launcher
   gh/                   ghのprivate config。別の認証保存／token表示は制限
   runtime.lock          Androidプロセスのflock。ファイルは削除せず再利用
   bridge.json           pid・port・接続token。0600、準備完了後に原子的に公開
   status.json           ネイティブの起動段階。会話／モデル実行状態の正本ではない
+  preview-request.json  foreground nativeへの一度限りのowner-bound request
+  preview-state.json    別processのavailability。会話の正本ではない
   open.html             private launcher。共有しない
 tmp/                    TMPDIR
 log/                    private起動ログ。外部へそのまま共有しない
 ```
 
-会話の保存は引き続き一つのdurable SQLite。Android側に別の会話や実行queueは作りません。
+会話の保存は引き続き一つのdurable SQLite。Android側に別の会話や実行queueは作りません。PreviewActivityはexported=falseの:previewプロセスに置き、初期化前のWebView data-directory suffixでstorageとCDP targetsを分離します。MainActivity／Previewの前面時だけrequestを消費し、旧runtimeのrequestは採用しません。WebView preview storageもprivateに保持します。
 
 ## 起動と終了
 
@@ -138,4 +144,4 @@ python3 -m unittest discover -s scripts -p 'test_*.py' -v
 - OAuthリンクのCDP clickは外部Activityへの遷移後にnavigation待ちがtimeoutしたが、実際にはChromeへ遷移済みだった。画面遷移の失敗と決めつけず、foreground componentと認証状態を独立に確認した
 - keyboard表示中のCDP screenshotには重複描画が出たため、それだけで実表示を判定しない。実際のADB screenshotをkeyboard候補／clipboardが出ない状態でapp領域だけcropして確認。実keyboardのlayoutは別途数値検証
 
-まだ未確認：実credentialの期限切れrefresh、実モデルcompaction、実IME変換、実ツール途中のhard kill・電源断、長時間background、デスクトップの複数process排他、クリーンなnpm依存取得。GitHub／gh追加の実機確認は今回完了。実モデルの自律GitHub CLI選択、他packageの互換性、browser移植／resource loaderなどは別の作業。
+まだ未確認：実credentialの期限切れrefresh、実モデルcompaction、実IME変換、実ツール途中のhard kill・電源断、長時間background、デスクトップの複数process排他、クリーンなnpm依存取得。GitHub／gh追加は実機確認済み。browser／画像readも実装・APK更新まで完了し、実機previewは画面ロック中のため保留。実モデルの自律CLI選択／vision、他package、resource loaderなどは別の作業。

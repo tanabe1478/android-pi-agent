@@ -10,6 +10,9 @@ git-askpass.cjs
 installation.json
 bridge.json
 status.json
+preview-state.json
+preview-request.json
+.preview-*.json
 open.html
 *.sqlite
 *.sqlite-*

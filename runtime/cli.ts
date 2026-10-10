@@ -211,6 +211,19 @@ child.on('exit', code => {
 });
 `,
     );
+    const browserCLI = fileURLToPath(new URL('./browser-cli.ts', import.meta.url));
+    await writeExecutable(
+      path.join(bin, 'pi-browser'),
+      `#!${node}
+const { spawn } = require('node:child_process');
+const child = spawn(${JSON.stringify(node)}, [${JSON.stringify(browserCLI)}, ...process.argv.slice(2)], {
+  env: { ...process.env, PI_ANDROID_STATE: ${JSON.stringify(stateDir)} }, stdio: 'inherit',
+});
+for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => child.kill(signal));
+child.on('error', () => { console.error('Preview CLI could not start.'); process.exitCode = 1; });
+child.on('exit', code => { process.exitCode = code ?? 1; });
+`,
+    );
     env.PATH = `${bin}:${prefix}/bin:${process.env.PATH ?? '/system/bin'}`;
     env.PREFIX = prefix;
     env.PI_ANDROID_STATE = stateDir;

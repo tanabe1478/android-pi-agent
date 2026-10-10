@@ -54,6 +54,13 @@ lexer tokensからallowlistのDOMを組み立てる。`innerHTML`、raw HTML実�
 取得はしない。linksはuserinfoなしのHTTP(S)だけ。Androidの既存navigation制限も
 変更しない。syntax highlightingや既存extensionの専用rendererはまだ未対応。
 
+## 画像tool表示
+
+checkpoint6で、readのPNG／JPEG／WebP結果をtool展開内へ表示します。boundedなbase64
+raster data URLだけを使い、remote images／SVG／HTMLは受け入れません。collapsed previewは
+「画像 n枚」と表示し、展開画像は幅100%／高さ60vhへ収めます。desktopのunsafe image／
+overflow検証済み、Galaxyの画像表示は未検証。[画像readとpreview](browser.md)。
+
 ## ファイル
 
 - `ui/index.html`／`style.css`：transcript・editor・footerとresponsive layout

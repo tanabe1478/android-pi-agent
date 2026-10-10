@@ -8,6 +8,8 @@ import type { AppController, AppView } from './contracts.ts';
 import { AppError, parseAction } from './protocol.ts';
 import { parseAuthAction, type Authentication } from './auth.ts';
 import { parseGitHubAction, type GitHubAuthentication } from './github.ts';
+import { parsePreviewOpen, type Preview } from './browser-preview.ts';
+import { createCDPProxy, validCDPPath } from './browser-cdp.ts';
 
 export async function createBridge(
   controller: AppController,
@@ -15,9 +17,17 @@ export async function createBridge(
   port = 0,
   auth?: Authentication,
   github?: GitHubAuthentication,
+  preview?: Preview,
 ) {
   const root = fileURLToPath(new URL('../', import.meta.url));
   const streams = new Set<http.ServerResponse>();
+  const cdp = preview
+    ? createCDPProxy(async () => {
+        const address = server.address();
+        if (!address || typeof address === 'string') throw new Error('Bridge is closed.');
+        return preview.socketPath(address.port);
+      })
+    : undefined;
 
   let refreshTimer: ReturnType<typeof setTimeout> | undefined;
   let refreshing = false;
@@ -77,6 +87,14 @@ export async function createBridge(
     return left.length === right.length && timingSafeEqual(left, right);
   }
 
+  function allowedOrigin(request: http.IncomingMessage, port: number) {
+    const origins = [`http://127.0.0.1:${port}`, `http://localhost:${port}`];
+    return (
+      origins.some(value => value.slice(7) === request.headers.host) &&
+      (!request.headers.origin || origins.includes(request.headers.origin))
+    );
+  }
+
   async function body(request: http.IncomingMessage) {
     if (!request.headers['content-type']?.startsWith('application/json'))
       throw new AppError('invalid_action', 'JSON形式で送信してください。');
@@ -103,12 +121,7 @@ export async function createBridge(
     const address = server.address();
     if (!address || typeof address === 'string') return json(response, 503, { error: 'not_ready' });
     const origins = [`http://127.0.0.1:${address.port}`, `http://localhost:${address.port}`];
-    const origin = request.headers.origin;
-    if (
-      !origins.some(value => value.slice(7) === request.headers.host) ||
-      (origin && !origins.includes(origin))
-    )
-      return json(response, 403, { error: 'origin' });
+    if (!allowedOrigin(request, address.port)) return json(response, 403, { error: 'origin' });
 
     let url: URL;
     try {
@@ -145,6 +158,26 @@ export async function createBridge(
               await github.execute(parseGitHubAction(await body(request))),
             );
           }
+        }
+
+        if (url.pathname.startsWith('/api/browser/') && preview && cdp) {
+          if (url.search) return json(response, 400, { error: 'query' });
+          if (url.pathname === '/api/browser/status' && request.method === 'GET')
+            return json(response, 200, await preview.snapshot(address.port));
+          if (url.pathname === '/api/browser/open' && request.method === 'POST')
+            return json(
+              response,
+              200,
+              await preview.open(parsePreviewOpen(await body(request)), address.port),
+            );
+          const route = url.pathname.slice('/api/browser/cdp'.length);
+          if (
+            url.pathname.startsWith('/api/browser/cdp/') &&
+            request.method === 'GET' &&
+            validCDPPath(route) &&
+            route.startsWith('/json/')
+          )
+            return json(response, 200, await cdp.discovery(route, address.port));
         }
 
         if (url.pathname === '/api/events' && request.method === 'GET') {
@@ -213,6 +246,33 @@ export async function createBridge(
     }
   });
 
+  server.on('upgrade', (request, socket, head) => {
+    const address = server.address();
+    try {
+      if (
+        closed ||
+        !cdp ||
+        !address ||
+        typeof address === 'string' ||
+        !allowedOrigin(request, address.port) ||
+        !authenticated(request)
+      )
+        throw new Error();
+      const url = new URL(request.url ?? '/', `http://127.0.0.1:${address.port}`);
+      const route = url.pathname.slice('/api/browser/cdp'.length);
+      if (
+        url.search ||
+        !url.pathname.startsWith('/api/browser/cdp/') ||
+        !validCDPPath(route) ||
+        !route.startsWith('/devtools/')
+      )
+        throw new Error();
+      void cdp.upgrade(request, socket, head, route).catch(() => socket.destroy());
+    } catch {
+      socket.destroy();
+    }
+  });
+
   server.requestTimeout = 15_000;
   server.headersTimeout = 10_000;
   await new Promise<void>((resolve, reject) => {
@@ -240,6 +300,7 @@ export async function createBridge(
       clearInterval(heartbeat);
       if (refreshTimer) clearTimeout(refreshTimer);
       for (const response of streams) response.end();
+      cdp?.close();
       await new Promise<void>(resolve => server.close(() => resolve()));
     },
   };

@@ -97,8 +97,26 @@ function renderTool(item, expanded) {
         : state;
   summary.append(title, element('span', label, 'tool-state'));
   details.open = expanded;
+  const images = (Array.isArray(result?.content) ? result.content : []).filter(
+    block =>
+      block.type === 'image' &&
+      ['image/png', 'image/jpeg', 'image/webp'].includes(block.mimeType) &&
+      typeof block.data === 'string' &&
+      block.data.length <= 11_184_812 &&
+      block.data.length % 4 === 0 &&
+      /^[A-Za-z0-9+/]*={0,2}$/.test(block.data),
+  );
   const output = result ? contentText(result.content) : (slot?.output ?? '');
-  details.append(summary, element('pre', output || '出力を待っています…'));
+  const imageNote = images.length ? `画像 ${images.length}枚 · 展開して表示` : '';
+  details.append(summary, element('pre', output || imageNote || '出力を待っています…'));
+  for (const block of images) {
+    const image = element('img', undefined, 'tool-image');
+    image.alt = `read結果 (${block.mimeType})`;
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    image.src = `data:${block.mimeType};base64,${block.data}`;
+    details.append(image);
+  }
   if (call.arguments) {
     const args = element('details', undefined, 'tool-arguments');
     args.append(
@@ -108,7 +126,7 @@ function renderTool(item, expanded) {
     details.append(args);
   }
   const lines = output.split('\n');
-  let preview = lines.slice(0, 4).join('\n').slice(0, 1200);
+  let preview = lines.slice(0, 4).join('\n').slice(0, 1200) || imageNote;
   if (lines.length > 4 || output.length > 1200) preview += '\n… タップして展開';
   node.append(details, element('pre', preview, 'tool-preview'));
   if (slot?.droppedLines || slot?.droppedBytes)
