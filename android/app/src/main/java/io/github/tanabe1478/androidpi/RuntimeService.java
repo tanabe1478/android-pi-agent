@@ -159,6 +159,8 @@ public final class RuntimeService extends Service {
     command.add(new File(files, "work").getAbsolutePath());
     command.add("--shell");
     command.add(shell);
+    command.add("--prefix");
+    command.add(prefix.getAbsolutePath());
     command.add("--parent-pid");
     command.add(Integer.toString(android.os.Process.myPid()));
 

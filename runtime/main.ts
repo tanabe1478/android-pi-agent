@@ -17,6 +17,8 @@ import { openKernel } from './kernel.ts';
 import { createBridge } from './bridge.ts';
 import { parentPid, publishBridge, removeBridge, watchParent } from './host-channel.ts';
 import { openAuthentication, withAuthentication, type Authentication } from './auth.ts';
+import { openGitHub, withGitHub, type GitHubAuthentication } from './github.ts';
+import { installGitTools } from './cli.ts';
 
 const { values } = parseArgs({
   options: {
@@ -25,6 +27,7 @@ const { values } = parseArgs({
     workspace: { type: 'string', default: process.cwd() },
     port: { type: 'string', default: '0' },
     shell: { type: 'string' },
+    prefix: { type: 'string' },
     'bridge-file': { type: 'boolean', default: false },
     'parent-pid': { type: 'string' },
   },
@@ -39,6 +42,8 @@ await mkdir(stateDir, { recursive: true, mode: 0o700 });
 
 let models: Models;
 let auth: Authentication | undefined;
+let github: GitHubAuthentication | undefined;
+let shellEnv: NodeJS.ProcessEnv | undefined;
 let model: Model<Api> | undefined;
 if (values.demo) {
   // Demo never opens credential storage or discovers the host's Pi authentication.
@@ -62,6 +67,14 @@ if (values.demo) {
   ({ models, auth } = await openAuthentication(stateDir));
   model = models.getModel('openai', 'gpt-6.1-sol');
   if (!model) throw new Error('The locked OpenAI catalog lacks the initial model.');
+  try {
+    github = await openGitHub(stateDir);
+    shellEnv = await installGitTools(stateDir, values.prefix);
+  } catch (error) {
+    await github?.close();
+    await auth.close();
+    throw error;
+  }
 }
 
 const kernel = await openKernel({
@@ -70,15 +83,21 @@ const kernel = await openKernel({
   models,
   demo: Boolean(values.demo),
   shellPath: values.shell,
+  shellEnv,
   initialModel: { provider: model.provider, modelId: model.id },
   authorizeModel: auth?.assertModel,
+}).catch(async error => {
+  await github?.close();
+  await auth?.close();
+  throw error;
 });
-const controller = auth ? withAuthentication(kernel, auth) : kernel;
+const authenticated = auth ? withAuthentication(kernel, auth) : kernel;
+const controller = github ? withGitHub(authenticated, github) : authenticated;
 
 const token = randomBytes(32).toString('base64url');
 let bridge;
 try {
-  bridge = await createBridge(controller, token, port, auth);
+  bridge = await createBridge(controller, token, port, auth, github);
 } catch (error) {
   await controller.close();
   throw error;
@@ -105,6 +124,7 @@ async function stop() {
 
   try {
     if (values['bridge-file']) await removeBridge(stateDir, token);
+    await github?.close();
     await auth?.close();
   } finally {
     try {

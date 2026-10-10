@@ -19,6 +19,7 @@
 - editorの下へcwd／session、累積usage／model／thinkingを配置する
 - `/`の候補は説明付きのリスト。ArrowUp／DownとTab、またはtapで選択する
 - `/model`、`/thinking`、`/resume`、`/login`などの操作を継続利用する
+- checkpoint5の`/github`／menuはprofile認証専用dialogを開く。PATはcomposerや会話へ入れず、masked inputを送信／closeで消す。この追加画面はdesktop／mock確認のみで、Galaxy確認は次の更新後に行う
 
 Piのusage docs、assistant/user/tool/footer componentsを確認し、DOMでこの表示を
 適応した。一般的なPiのsession implementationへ切り替えたのではない。

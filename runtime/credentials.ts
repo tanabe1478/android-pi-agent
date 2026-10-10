@@ -8,7 +8,7 @@ import type { AuthOperationOptions, Credential, CredentialStore } from '@earendi
 const MAXIMUM = 256 * 1024;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-async function readPrivate(file: string): Promise<unknown> {
+export async function readPrivate(file: string): Promise<unknown> {
   const handle = await open(file, constants.O_RDONLY | constants.O_NOFOLLOW);
   try {
     const metadata = await handle.stat();
@@ -31,7 +31,7 @@ async function readPrivate(file: string): Promise<unknown> {
   }
 }
 
-async function writePrivate(file: string, value: unknown): Promise<void> {
+export async function writePrivate(file: string, value: unknown): Promise<void> {
   const serialized = JSON.stringify(value);
   if (Buffer.byteLength(serialized) > MAXIMUM) {
     throw new Error('Authentication data is too large.');

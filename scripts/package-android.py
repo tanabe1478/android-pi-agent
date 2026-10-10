@@ -35,7 +35,13 @@ SOURCE_FILES = (
     "runtime/host-channel.ts",
     "runtime/credentials.ts",
     "runtime/auth.ts",
+    "runtime/github.ts",
+    "runtime/cli.ts",
+    "runtime/packages.ts",
+    "runtime/package-cli.ts",
+    "runtime/termux-baseline.json",
     "ui/auth.js",
+    "ui/github.js",
 )
 
 
@@ -196,6 +202,11 @@ def build(root, rootfs, output):
     output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=output) as temporary:
         staging = Path(temporary)
+        native = staging / "rootfs.bin"
+        repack_rootfs(rootfs, native)
+        baseline = json.loads((root / "runtime/termux-baseline.json").read_text())
+        if baseline.get("rootfsSha256") != sha256(native):
+            raise ValueError("Native baseline metadata does not match the repacked rootfs")
         runtime = staging / "runtime.bin"
         with runtime.open("wb") as stream, gzip.GzipFile(
             filename="", fileobj=stream, mode="wb", mtime=0
@@ -226,8 +237,6 @@ def build(root, rootfs, output):
                         if file.is_file():
                             add_file(archive, file, "app/" + package + "/" + relative.as_posix())
 
-        native = staging / "rootfs.bin"
-        repack_rootfs(rootfs, native)
         files = {
             name: {"sha256": sha256(staging / name), "size": (staging / name).stat().st_size}
             for name in ("rootfs.bin", "runtime.bin")

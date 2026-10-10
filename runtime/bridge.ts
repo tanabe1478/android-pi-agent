@@ -7,12 +7,14 @@ import { fileURLToPath } from 'node:url';
 import type { AppController, AppView } from './contracts.ts';
 import { AppError, parseAction } from './protocol.ts';
 import { parseAuthAction, type Authentication } from './auth.ts';
+import { parseGitHubAction, type GitHubAuthentication } from './github.ts';
 
 export async function createBridge(
   controller: AppController,
   token: string,
   port = 0,
   auth?: Authentication,
+  github?: GitHubAuthentication,
 ) {
   const root = fileURLToPath(new URL('../', import.meta.url));
   const streams = new Set<http.ServerResponse>();
@@ -134,6 +136,17 @@ export async function createBridge(
           }
         }
 
+        if (url.pathname === '/api/github' && github) {
+          if (request.method === 'GET') return json(response, 200, github.snapshot());
+          if (request.method === 'POST') {
+            return json(
+              response,
+              200,
+              await github.execute(parseGitHubAction(await body(request))),
+            );
+          }
+        }
+
         if (url.pathname === '/api/events' && request.method === 'GET') {
           if (streams.size >= 8) return json(response, 429, { error: 'clients' });
           // Global invalidation is already subscribed. Register only after the initial
@@ -165,6 +178,7 @@ export async function createBridge(
         '/components.js': 'ui/components.js',
         '/client.js': 'ui/client.js',
         '/auth.js': 'ui/auth.js',
+        '/github.js': 'ui/github.js',
         '/markdown.js': 'ui/markdown.js',
         '/presentation.js': 'ui/presentation.js',
         '/vendor/marked.js': 'ui/vendor/marked.js',

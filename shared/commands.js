@@ -4,6 +4,7 @@ export const COMMANDS = Object.freeze([
   { name: 'model', description: 'モデルを選択' },
   { name: 'thinking', description: '思考レベルを選択' },
   { name: 'login', description: 'ChatGPT認証を開く（実モード）' },
+  { name: 'github', description: 'GitHub認証を開く（PATは専用欄のみ）' },
   { name: 'new', description: '会話を新規作成' },
   { name: 'resume', description: '会話を切り替え' },
   { name: 'name', description: '会話名を変更' },

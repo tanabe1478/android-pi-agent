@@ -66,6 +66,14 @@ AppViewには非secretのAuthSummaryだけを追加します。OAuth URL／manua
 
 既存認証を保持したまま再認証でき、5分timeout／取消／shutdownでloginを終了します。UIのconnectedは保存済み認証の存在を示すため、実token refresh／実推論の成功を証明する表示ではありません。logout UIや他providerは別の区切りです。
 
+## GitHub・CLI
+
+GitHubもprofileサービスで、会話やagent backendではありません。`runtime/github.ts`がprivate PATの検証・保存を所有し、controllerへ非secretのGitHubSummaryだけを加えます。専用APIはrevisionでstale操作を拒否し、解除は短命・一度限りの確認付き。HTTP失敗時は読み直しだけで、保存／削除を自動再送しません。
+
+`runtime/cli.ts`の生成launcherとgit askpassはprofile専用。tokenをGit URL／config／argvへ入れず、gitの親shell環境へも渡しません。gh native childだけへGH_TOKENを供給し、認証表示・別host・別認証store・alias／extensionを制限します。同じUIDの任意コードからの隔離ではありません。
+
+Android serviceが明示するprefixを、CodingToolsのNodeExecutionEnv.shellEnvへ渡します。pi-pkgは別のmodel loopを持たない標準CLIで、native baseline receiptと照合した追加registryを持ちます。APK更新と同じくusrの既存filesを保護し、maintainer scriptsやbaseline更新は実行しません。詳細は[CLIの境界](cli.md)。
+
 ## Piを基本にする表示
 
 画面は通常Piの配置・操作感を基本にし、mobileで難しい部分だけ変更する。

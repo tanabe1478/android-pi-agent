@@ -20,11 +20,19 @@ export interface AuthSummary {
   revision: number;
 }
 
+export interface GitHubSummary {
+  connected: boolean;
+  user: string | null;
+  status: 'idle' | 'verifying' | 'done' | 'error';
+  revision: number;
+}
+
 export interface AppView {
   instanceId: string;
   revision: number;
   demo: boolean;
   auth?: AuthSummary;
+  github?: GitHubSummary;
   activeId: number;
   sessions: readonly SessionSummary[];
   models: readonly ModelSummary[];
@@ -52,7 +60,7 @@ export type Action =
 export type ActionResult =
   | { kind: 'done' }
   | { kind: 'accepted'; operationId: number }
-  | { kind: 'dialog'; dialog: 'models' | 'thinking' | 'sessions' | 'help' | 'auth' }
+  | { kind: 'dialog'; dialog: 'models' | 'thinking' | 'sessions' | 'help' | 'auth' | 'github' }
   | { kind: 'confirmation'; conversationId: number; token: string; message: string };
 
 export interface AppController {

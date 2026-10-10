@@ -232,11 +232,11 @@ export class Dialog {
     this.node.close();
   }
 
-  confirm(message) {
+  confirm(message, label = 'リセットする') {
     return new Promise(resolve => {
       this.show('操作を確認', [
         element('p', message),
-        button('リセットする', () => {
+        button(label, () => {
           this.finish = null;
           this.close();
           resolve(true);

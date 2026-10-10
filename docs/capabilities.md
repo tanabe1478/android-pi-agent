@@ -1,4 +1,4 @@
-# 機能対応表（チェックポイント4）
+# 機能対応表（チェックポイント5）
 
 検証環境を各行と[Androidの検証範囲](android.md)で区別する。「実装済み」は端末Piと完全に同じ意味を保証する表示ではない。
 
@@ -14,7 +14,7 @@
 | clear | 実装済み | 文脈リセット。確認・busy guard・履歴保持。旧履歴の閲覧UIは未実装 |
 | compaction | 最小接続 | 要求・live状態・停止。完了結果の専用通知や実モデル要約の検証は未実施 |
 | steering / follow-up | 実装済み | durableの入力キューに入れる。取消・abort。個別編集は未実装 |
-| slash completion | 実装済み | 共通catalogの10コマンド（/login追加）。説明付きリストとArrow／Tab／tap選択。未知のコマンドは拒否 |
+| slash completion | 実装済み | 共通catalogの11コマンド（/github追加）。説明付きリストとArrow／Tab／tap選択。未知のコマンドは拒否 |
 | workspace | 最小実装 | 起動時に明示、realpath確認、会話作成時に引継ぎ。picker／変更UIは未実装 |
 | skills / AGENTS.md読込み | 未対応 | 既存Piのloader／prompt生成を再利用できる境界を整える |
 | prompt templates | 未対応 | 引数展開とresource discoveryを共通側へ接続 |
@@ -26,15 +26,16 @@
 | ! / !! | 明示的に未対応 | 私的シェル入力として扱うべきものをモデルへ誤送信しない |
 | tree / import / export / share | 未対応 | durableの履歴・分岐とCLI形式の違いを扱う |
 | ChatGPT認証 | 接続済み・実機確認 | 既存pi-ai OAuth、private保存、refresh、取消・timeout、manual fallback。GalaxyのChromeで実ログインし、login非表示／menu再認証とservice再開後の認証利用を確認。期限切れ実refreshは未検証。logout・他provider／API keyは未対応 |
-| GitHub認証 | 未対応 | 参照の既存実装を共通側へ接続。旧PATを自動移行しない |
-| on-demand CLI / pi-browser | 未対応 | 参照のCLI-first実装を移植。承認境界とnative hostを先に整える |
+| GitHub認証 | 実装済み・host／mock確認 | 新profile専用PAT、専用UI／API、git HTTPS askpass、ghの限定ラッパー。失敗時保持・確認付き解除。実GitHub／Galaxyは未検証。旧PATは移行しない |
+| on-demand CLI | 追加専用・host／mock確認 | pi-pkg list／plan／install --yes。native baseline照合・SHA256・overwrite／upgrade拒否・通常失敗のrollback。maintainer scripts／APT署名検証／crash自動修復は未対応。実端末のdownload・CLI追加は未検証 |
+| pi-browser | 未対応 | 参照のisolated preview／CLI-first実装とnative hostを移植する |
 | Android APK・native host | Galaxyで最小動作確認 | 別ID・targetSdk 28。private展開、foreground service、Node／WebView、keyboard resize、実認証／推論／toolsを確認。実IME変換・長時間動作などは未検証 |
 | process death / recovery | 限定的に検証 | Android service停止／再開で実認証・会話・モデル／思考を復元。前のfauxではidle owner kill後の会話復元とflockも確認。実ツール途中のkill・電源断・長時間background、デスクトップのprofile lockは未検証／未対応 |
 
 ## 実装の順序
 
 1. この土台をコミットし、構造と未対応範囲を共有
-2. Androidホストのfaux確認、ChatGPT adapter、実認証／推論／toolsの実機確認は完了。GitHub・on-demand CLI・browserの移植と、実IME／復旧の残りを続ける
+2. Androidホストのfaux確認、ChatGPT adapter、実認証／推論／tools、Pi型UIの基本実機確認は完了。GitHub・on-demand CLIは実装／host検証とAPK buildまで。端末接続後にデータ保持更新・実通信／CLI追加を確認し、browser移植と実IME／復旧を続ける
 3. Piのresource loader・拡張UI能力を再利用／適応し、端末Piとの機能差を埋める
 4. 添付、履歴／tree、直接シェル、MCPなどを対応表とテストで進める
 

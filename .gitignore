@@ -3,6 +3,10 @@ node_modules
 .demo/
 .android-pi/
 auth.json
+github.json
+packages.json
+package-install.lock
+git-askpass.cjs
 installation.json
 bridge.json
 status.json

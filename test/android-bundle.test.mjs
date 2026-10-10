@@ -18,6 +18,20 @@ test(
     const state = path.join(root, 'state');
     await mkdir(workspace);
     execFileSync('tar', ['xzf', path.resolve(bundle), '-C', root]);
+    for (const file of [
+      'runtime/github.ts',
+      'runtime/cli.ts',
+      'runtime/packages.ts',
+      'runtime/package-cli.ts',
+      'runtime/termux-baseline.json',
+      'ui/github.js',
+    ]) {
+      assert.deepEqual(
+        await readFile(path.join(root, 'app', file)),
+        await readFile(new URL('../' + file, import.meta.url)),
+        `Stale packaged source: ${file}`,
+      );
+    }
     const sdk = execFileSync(
       process.execPath,
       [
@@ -123,6 +137,12 @@ test(
     // Switching the host to real mode must neither erase nor silently change the saved faux session.
     const third = await start(false);
     const real = await third.snapshot();
+    assert.equal(real.github.connected, false);
+    assert.ok(
+      (await readFile(path.join(state, 'bin/git-askpass.cjs'), 'utf8')).includes('github.com'),
+    );
+    assert.equal((await fetch(third.url + '/github.js')).status, 200);
+    assert.equal((await fetch(third.url + '/api/github', { headers: third.headers })).status, 200);
     assert.equal(real.demo, false);
     assert.equal(real.auth.connected, false);
     assert.match(JSON.stringify(real.conversation.entries), /packaged fixture/);

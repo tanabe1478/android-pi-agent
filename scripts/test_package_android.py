@@ -41,6 +41,11 @@ class PackageTests(unittest.TestCase):
         (self.root / "package-lock.json").write_text(json.dumps(self.lock))
         self.native = self.root / "native.bin"
         self.native_archive(self.native)
+        repacked = self.root / "repacked.bin"
+        packager.repack_rootfs(self.native, repacked)
+        (self.root / "runtime/termux-baseline.json").write_text(json.dumps({
+            "rootfsSha256": packager.sha256(repacked), "packages": [],
+        }))
 
     def native_archive(self, file, extra=None):
         with tarfile.open(file, "w:gz") as archive:
@@ -109,6 +114,13 @@ class PackageTests(unittest.TestCase):
             self.native_archive(self.native, item)
             with self.assertRaises(ValueError):
                 packager.validate_rootfs(self.native)
+
+    def test_baseline_metadata_mismatch_is_rejected(self):
+        (self.root / "runtime/termux-baseline.json").write_text(json.dumps({
+            "rootfsSha256": "0" * 64, "packages": [],
+        }))
+        with self.assertRaisesRegex(ValueError, "baseline metadata"):
+            packager.build(self.root, self.native, self.root / "out")
 
     def test_dependency_symlinks_are_not_followed(self):
         link = self.root / "node_modules/fixture/secret-link"

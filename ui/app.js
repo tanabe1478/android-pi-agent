@@ -2,6 +2,7 @@ import { COMMANDS, suggestions } from '/shared/commands.js';
 import { Client } from './client.js';
 import { Transcript, Dialog, activityOf, busyOf, element, button } from './components.js';
 import { AuthenticationPanel } from './auth.js';
+import { GitHubPanel } from './github.js';
 import { usageOf, formatTokens, shortPath } from './presentation.js';
 
 const $ = id => document.getElementById(id);
@@ -36,6 +37,11 @@ const authentication = new AuthenticationPanel(
   () => showDialog('models'),
 );
 
+const github = new GitHubPanel(client, dialog, message => {
+  errorMessage = message;
+  status();
+});
+
 function status() {
   $('status').classList.toggle('error', Boolean(errorMessage));
   $('status').textContent =
@@ -53,7 +59,9 @@ function render(next) {
   // A foreground read can race SSE. Never replace a newer view from this same owner.
   if (
     next.instanceId === view?.instanceId &&
-    (next.revision < view.revision || (next.auth?.revision ?? 0) < (view.auth?.revision ?? 0))
+    (next.revision < view.revision ||
+      (next.auth?.revision ?? 0) < (view.auth?.revision ?? 0) ||
+      (next.github?.revision ?? 0) < (view.github?.revision ?? 0))
   )
     return;
 
@@ -63,6 +71,7 @@ function render(next) {
   $('mode-banner').hidden = !view.demo;
   $('auth-bar').hidden = !view.auth || view.auth.connected;
   authentication.render(view.auth);
+  github.render(view.github);
   const session = view.sessions.find(session => session.id === view.activeId);
   $('sessions').textContent = session?.name ?? '会話';
 
@@ -133,6 +142,8 @@ function showDialog(kind, conversationId = view?.activeId) {
 
   if (kind === 'auth') {
     authentication.open();
+  } else if (kind === 'github') {
+    github.open();
   } else if (kind === 'usage') {
     const usage = usageOf(view);
     dialog.show('累積使用量', [
@@ -360,6 +371,13 @@ $('menu').addEventListener('click', () => {
           ),
         ]
       : []),
+    ...(view.github
+      ? [
+          button(view.github.connected ? 'GitHub認証を管理' : 'GitHub認証を設定', () =>
+            showDialog('github'),
+          ),
+        ]
+      : []),
     button('会話名を変更', async () => {
       const name = await dialog.input(
         '会話名',
@@ -421,6 +439,7 @@ window.addEventListener(
   'pagehide',
   () => {
     authentication.dispose();
+    github.dispose();
     client.dispose();
     transcript.dispose();
     dialog.dispose();

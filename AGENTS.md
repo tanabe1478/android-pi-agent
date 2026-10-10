@@ -23,6 +23,8 @@
 - No credentials, private databases, screenshots, APKs, runtime archives or signing keys in git.
 - Bridge tokens use request headers, never query strings. Local HTTP is authenticated and loopback-only.
 - This is not isolation from code/tools running under the app UID.
+- GitHub PATs belong only in the masked profile dialog/private store, never in model input, shell arguments, URLs or logs. Do not run gh auth token, dump the environment or inspect credential files.
+- pi-pkg is additive only: no baseline/installed upgrades, overwrites or maintainer scripts. An interrupted package-install.lock requires inspection, never automatic deletion. Check it before APK updates.
 - Tests use temporary state and faux models; never discover the host's real Pi credentials.
 - Distinguish host unit tests, desktop-browser checks, Android build success, device execution and real-provider inference.
 - Keep setup read-only toward reference dependencies. Apply the standing project authorization above; do not ask again for routine steps.

@@ -1,0 +1,277 @@
+{
+  "rootfsSha256": "1c9f640dab3702b9bba0c364259a090b675347ff0a656fcd725a350a77cbfecc",
+  "packages": [
+    {
+      "package": "attr",
+      "version": "2.6.0"
+    },
+    {
+      "package": "bash",
+      "version": "5.3.20"
+    },
+    {
+      "package": "bzip2",
+      "version": "1.0.8-8"
+    },
+    {
+      "package": "c-ares",
+      "version": "1.34.8"
+    },
+    {
+      "package": "ca-certificates",
+      "version": "1:2026.09.25"
+    },
+    {
+      "package": "coreutils",
+      "version": "9.11-1"
+    },
+    {
+      "package": "curl",
+      "version": "8.22.0"
+    },
+    {
+      "package": "dash",
+      "version": "0.5.13.5"
+    },
+    {
+      "package": "debianutils",
+      "version": "5.24"
+    },
+    {
+      "package": "dialog",
+      "version": "1.3-20260721-0"
+    },
+    {
+      "package": "diffutils",
+      "version": "3.12-2"
+    },
+    {
+      "package": "fd",
+      "version": "10.5.0"
+    },
+    {
+      "package": "findutils",
+      "version": "4.11.0"
+    },
+    {
+      "package": "gawk",
+      "version": "5.3.2"
+    },
+    {
+      "package": "git",
+      "version": "2.56.0"
+    },
+    {
+      "package": "grep",
+      "version": "3.12-3"
+    },
+    {
+      "package": "gzip",
+      "version": "1.15"
+    },
+    {
+      "package": "krb5",
+      "version": "1.22.2"
+    },
+    {
+      "package": "ldns",
+      "version": "1.9.2"
+    },
+    {
+      "package": "less",
+      "version": "710"
+    },
+    {
+      "package": "libacl",
+      "version": "2.4.0"
+    },
+    {
+      "package": "libandroid-glob",
+      "version": "0.6-3"
+    },
+    {
+      "package": "libandroid-posix-semaphore",
+      "version": "0.1-4"
+    },
+    {
+      "package": "libandroid-selinux",
+      "version": "14.0.0.11-1"
+    },
+    {
+      "package": "libandroid-support",
+      "version": "29-1"
+    },
+    {
+      "package": "libbz2",
+      "version": "1.0.8-8"
+    },
+    {
+      "package": "libc++",
+      "version": "30"
+    },
+    {
+      "package": "libcap-ng",
+      "version": "2:0.9.6"
+    },
+    {
+      "package": "libcurl",
+      "version": "8.22.0"
+    },
+    {
+      "package": "libdb",
+      "version": "18.1.40-6"
+    },
+    {
+      "package": "libedit",
+      "version": "20260512-3.1-0"
+    },
+    {
+      "package": "libexpat",
+      "version": "2.8.5"
+    },
+    {
+      "package": "libffi",
+      "version": "3.8.0"
+    },
+    {
+      "package": "libgmp",
+      "version": "6.3.0-2"
+    },
+    {
+      "package": "libiconv",
+      "version": "1.19"
+    },
+    {
+      "package": "libicu",
+      "version": "78.3"
+    },
+    {
+      "package": "liblzma",
+      "version": "5.8.4"
+    },
+    {
+      "package": "libmpfr",
+      "version": "4.2.1-1"
+    },
+    {
+      "package": "libnghttp2",
+      "version": "1.70.0"
+    },
+    {
+      "package": "libnghttp3",
+      "version": "1.18.0"
+    },
+    {
+      "package": "libngtcp2",
+      "version": "1.25.0"
+    },
+    {
+      "package": "libresolv-wrapper",
+      "version": "1.1.8"
+    },
+    {
+      "package": "libsmartcols",
+      "version": "2.42.4"
+    },
+    {
+      "package": "libsqlite",
+      "version": "3.53.4"
+    },
+    {
+      "package": "libssh2",
+      "version": "1.11.1-2"
+    },
+    {
+      "package": "ncurses",
+      "version": "6.6.20260307+really6.5.20250830"
+    },
+    {
+      "package": "nodejs",
+      "version": "26.4.0-1"
+    },
+    {
+      "package": "npm",
+      "version": "11.20.0"
+    },
+    {
+      "package": "openssh",
+      "version": "10.5p1"
+    },
+    {
+      "package": "openssh-sftp-server",
+      "version": "10.5p1"
+    },
+    {
+      "package": "openssl",
+      "version": "1:3.6.5"
+    },
+    {
+      "package": "pcre2",
+      "version": "10.49"
+    },
+    {
+      "package": "procps",
+      "version": "4.0.7-2"
+    },
+    {
+      "package": "psmisc",
+      "version": "23.7-1"
+    },
+    {
+      "package": "readline",
+      "version": "8.3.6"
+    },
+    {
+      "package": "resolv-conf",
+      "version": "1.3"
+    },
+    {
+      "package": "ripgrep",
+      "version": "15.2.0"
+    },
+    {
+      "package": "sed",
+      "version": "4.10"
+    },
+    {
+      "package": "tar",
+      "version": "1.35-3"
+    },
+    {
+      "package": "termux-am",
+      "version": "0.8.1"
+    },
+    {
+      "package": "termux-am-socket",
+      "version": "1.5.0-1"
+    },
+    {
+      "package": "termux-auth",
+      "version": "1.5.0-1"
+    },
+    {
+      "package": "termux-core",
+      "version": "0.4.0-1"
+    },
+    {
+      "package": "termux-exec",
+      "version": "1:2.5.0-1"
+    },
+    {
+      "package": "termux-tools",
+      "version": "1.46.0+really1.45.0-1"
+    },
+    {
+      "package": "util-linux",
+      "version": "2.42.4"
+    },
+    {
+      "package": "xz-utils",
+      "version": "5.8.4"
+    },
+    {
+      "package": "zlib",
+      "version": "1.3.2"
+    }
+  ]
+}

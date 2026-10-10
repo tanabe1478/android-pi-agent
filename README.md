@@ -2,9 +2,9 @@
 
 個人用のAndroidローカルPi環境。`pi-durable`を唯一のエージェントバックエンドにし、`pi-tui`の設計を参考に、タッチ・IME向けの操作画面を作ります。
 
-**チェックポイント4：通常のPiに近い、フラットな本文・思考／ツール表示・下部エディタ／フッターへ変更。スマホ向けの送信・停止・touch操作とIME guardを残します。41テストとAPK buildが成功し、Galaxyへデータ保持で更新済み。新UIの基本操作・ツール展開・実keyboard resizeも確認しました。**
+**チェックポイント5：新profile専用GitHub PAT、標準git／ghへの接続、追加専用のpi-pkgを実装。61テストとAPK `0.5.0-cli`のoffline buildが成功しました。端末がADB未接続のため、新バージョンのインストール・実GitHub接続・実CLI追加は未検証です。**
 
-前の区切りではGalaxyでChatGPTログイン、`openai/gpt-6.1-sol`の実推論、実モデルが選ぶwrite/read/bash、service再起動後の復元を確認しました。今回のUI検証や、期限切れcredentialの実refresh・Pi全機能互換とは区別します。
+Galaxyには前の`0.4.0-ui`がインストール済みで、Pi型UIの基本操作・ツール展開・実keyboard resizeを確認しています。さらに前の区切りでChatGPTログイン、`openai/gpt-6.1-sol`の実推論、実モデルが選ぶwrite/read/bash、service再起動後の復元を確認しました。今回のhost／mock検証や、期限切れcredentialの実refresh・Pi全機能互換とは区別します。
 
 ```text
 Android向けUI（ブラウザとGalaxy WebViewで最小操作を検証）
@@ -26,6 +26,8 @@ SQLite / 明示的な作業ディレクトリ
 - 実機でChromeへの遷移とユーザーのChatGPTログイン、実モデルの短い応答、回答中の日本語＋emoji draft／focus保持を確認
 - 実モデルが既存CodingToolsを`write → read → bash`の順に選択し、専用fixture directoryで成功。service再起動後の認証利用も確認
 - 新profile専用の0600認証ファイル、stable installation ID、pi-aiによる直列化したtoken refresh。旧アプリ／ホストPiの認証やambient API keyは使わない
+- `/github`／操作メニューからPATを専用masked欄へ入力。GitHubで検証して保存し、失敗時は既存PATを保持。解除は確認付き。PATを会話やAppViewへ出さない（host／mock検証）
+- CodingToolsのshell環境に標準gitのHTTPS askpass、private `gh`／`pi-pkg` launcherを接続。usrの既存binaryを移動・上書きせず、必要なCLIだけ追加（host／mock検証）
 - fauxモデルによるローカルデモ（`--demo`。実認証ファイルや外部モデルAPIを使わない）
 - Pi型のフラットなMarkdown本文、思考表示、call/resultをまとめたツール表示と展開保持。下部にエディタとcwd／session／model／thinking／累積usage
 - ストリーミング状態・思考・ツール結果の表示、生成中の入力保持。Enterは改行、送信button／Ctrl+Enterを使用。スマホ向けの違いは[UI方針](docs/ui.md)
@@ -79,6 +81,21 @@ npm start
 
 同じprofileを複数のデスクトッププロセスで同時に開かないでください。Androidはserviceのflockを使いますが、デスクトップのprocess lockは未実装です。
 
+## GitHub・必要なCLIの追加
+
+`/github`または操作メニューのGitHub認証を開き、必要なrepositoryだけを許可したPATを専用欄で保存します。旧アプリやホストPiからは読み込まず、GitHub認証はChatGPT認証と独立しています。PATを会話、コマンド、URLへ貼らないでください。
+
+AndroidのCodingToolsから、必要時に以下の標準CLIを使います：
+
+```sh
+pi-pkg list
+pi-pkg plan gh
+pi-pkg install gh --yes
+gh repo list --limit 20
+```
+
+`git`は同じPATをHTTPS認証に使います。`gh`は追加後に新profileのラッパーを経由します。`pi-pkg`はbaseline／既存filesを置換しない追加専用で、apt互換ではありません。現在はhost／mock検証のみで、実端末の保存・通信・CLI追加は次の確認です。[認証・CLIの境界と検証](docs/cli.md)を参照してください。
+
 ## 検証
 
 ```sh
@@ -98,4 +115,4 @@ Chrome指定時は360×780のデスクトップブラウザでもUIを検証し�
 
 新application IDは`io.github.tanabe1478.androidpi`、今回の表示名は`Android Pi`です。[Androidホスト・ビルド・保存領域・未検証範囲](docs/android.md)を参照してください。
 
-`0.4.0-ui`は端末へ更新済みで、今回の更新前後で認証・選択・6会話・16エントリを保持しました。新UIの基本操作とkeyboard表示中の送信control／footerの収まりを確認済みです。旧アプリ・会話・認証は移行／変更していません。実IMEの日本語変換、実ツール途中のkill、長時間backgroundなども未検証です。
+`0.5.0-cli`はビルド済み・未インストールです。端末へ更新済みの`0.4.0-ui`では、更新前後で認証・選択・6会話・16エントリを保持しました。新UIの基本操作とkeyboard表示中の送信control／footerの収まりを確認済みです。旧アプリ・会話・認証は移行／変更していません。実IMEの日本語変換、実ツール途中のkill、長時間backgroundなども未検証です。

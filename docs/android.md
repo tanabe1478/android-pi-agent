@@ -1,8 +1,12 @@
-# Androidホスト（チェックポイント4）
+# Androidホスト（チェックポイント5）
+
+`0.5.0-cli`（versionCode 4）のoffline APK buildが成功。GitHub profile認証、git／gh、pi-pkgを追加しました。**端末はADB未接続で、新APKは未インストール。実GitHub保存／通信、実端末へのCLI追加は未検証です。** host検証は55 Node／browser／bundle＋6 Python＝61件、failure／skipなし。参照依存・native assetsは読み取り専用、追加download／install scriptsは実行していません。[CLIの検証範囲](cli.md)を参照してください。
+
+## 前のPi型UIの実機検証
 
 `0.4.0-ui`をGalaxyへデータ保持で更新。新UIは[Piを基本にしたAndroid表示](ui.md)を参照してください。認証・選択・6会話・16エントリの保持と確定entry比較の一致を確認しました。新UIの基本操作、3つのtool call/resultの表示と展開、footer selectors、実keyboard表示中のlayoutも確認しました。viewportは360×730→360×403で、送信control／footerはkeyboardに隠れず、履歴領域は209pxを確保。JavaScript error・水平overflowなし。
 
-今回のhost検証は36 Node／browser／bundle＋5 Python＝41件、failure／skipなし。APKのoffline buildとID／SDK確認も成功しています。新UI確認ではモデルへ新しい入力は送らず、会話・選択・設定・usageを保持しています。実IMEの手入力・変換は未検証。自動消灯には検証中だけWeb Screen Wake Lockを使い、終了時に解除しました。Android設定の変更や常時点灯機能の追加はありません。以下の実認証／実推論記録は前の`0.3.0-auth`での確認です。
+Pi型UIの区切りでのhost検証は36 Node／browser／bundle＋5 Python＝41件、failure／skipなし。APKのoffline buildとID／SDK確認も成功しています。新UI確認ではモデルへ新しい入力は送らず、会話・選択・設定・usageを保持しています。実IMEの手入力・変換は未検証。自動消灯には検証中だけWeb Screen Wake Lockを使い、終了時に解除しました。Android設定の変更や常時点灯機能の追加はありません。以下の実認証／実推論記録は前の`0.3.0-auth`での確認です。
 
 **Galaxy SM-S931Zへ`0.3.0-auth`をデータ保持で更新し、新アプリ専用ChatGPTログイン・`openai/gpt-6.1-sol`の実推論・実モデルによるCodingTools選択／実行を確認しました。service再起動後も認証・会話・モデル／思考を保持。実IMEの手入力・変換や実ツール途中のkillまで完了したとは扱いません。**
 
@@ -25,6 +29,11 @@ home/.android-pi/
   session.sqlite        durableの会話・catalog
   auth.json             新アプリ専用OAuth credential。0600、会話／AppViewへ出さない
   installation.json     stable installation ID。0600、更新時も保持
+  github.json           checkpoint5の新profile専用PAT。0600、会話／AppViewへ出さない
+  packages.json         checkpoint5の追加CLI registry。baseline／旧アプリとは独立
+  package-install.lock  追加installerの排他。中断時は自動解除せず要確認
+  bin/                  checkpoint5のmanaged git askpass／gh／pi-pkg launcher
+  gh/                   ghのprivate config。別の認証保存／token表示は制限
   runtime.lock          Androidプロセスのflock。ファイルは削除せず再利用
   bridge.json           pid・port・接続token。0600、準備完了後に原子的に公開
   status.json           ネイティブの起動段階。会話／モデル実行状態の正本ではない
@@ -60,7 +69,7 @@ wake lockは期限付きで更新し、worker終了／service終了で解除し�
 - ネイティブ`usr/`は初回だけ展開。既存prefixや追加CLIを丸ごと置換しない
 - 既存prefixのreceiptがない／baselineが変わった場合は自動上書きせず、明示的な確認・移行が必要
 - `app/`はstagingから差し替え、公開失敗時に旧コードを戻す。失敗したrollbackは回復用stagingを残す
-- APK更新前に実行中の仕事・draftを確認し、継続承認内で`adb install -r`を使う
+- APK更新前に実行中の仕事・draftとpackage-install.lockの有無を確認し、継続承認内で`adb install -r`を使う
 - デモ会話のモデルを黙って実モデルへ変更しない。更新後に認証し、モデルを明示的に選ぶ
 
 これは承認・検証・rollbackを伴う完成した自己更新機能ではありません。別portでbridgeを再起動したときの画面reloadでは未送信ドラフトが失われ得ます。確定会話はSQLiteから復元します。
@@ -127,4 +136,4 @@ python3 -m unittest discover -s scripts -p 'test_*.py' -v
 - OAuthリンクのCDP clickは外部Activityへの遷移後にnavigation待ちがtimeoutしたが、実際にはChromeへ遷移済みだった。画面遷移の失敗と決めつけず、foreground componentと認証状態を独立に確認した
 - keyboard表示中のCDP screenshotには重複描画が出たため、それだけで実表示を判定しない。実際のADB screenshotをkeyboard候補／clipboardが出ない状態でapp領域だけcropして確認。実keyboardのlayoutは別途数値検証
 
-まだ未確認：実credentialの期限切れrefresh、実モデルcompaction、実IME変換、実ツール途中のhard kill・電源断、長時間background、デスクトップの複数process排他、クリーンなnpm依存取得。browser／GitHub／resource loaderなどの広い機能対応は別の作業。
+まだ未確認：実credentialの期限切れrefresh、実モデルcompaction、実IME変換、実ツール途中のhard kill・電源断、長時間background、デスクトップの複数process排他、クリーンなnpm依存取得。GitHub／on-demand CLIの実機確認、browser移植／resource loaderなどの広い機能対応は別の作業。

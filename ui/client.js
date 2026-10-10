@@ -26,6 +26,10 @@ export class Client {
     return this.request('/api/auth', action);
   }
 
+  github(action) {
+    return this.request('/api/github', action);
+  }
+
   view() {
     return this.request('/api/view');
   }

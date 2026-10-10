@@ -45,6 +45,7 @@ export interface OpenOptions {
   models: Models;
   initialModel?: ModelRef;
   shellPath?: string;
+  shellEnv?: NodeJS.ProcessEnv;
   settings?: HarnessSettings;
   demo?: boolean;
   authorizeModel?: (provider: string) => void;
@@ -70,7 +71,10 @@ export async function openKernel(options: OpenOptions): Promise<AppController> {
         section(
           'android_pi',
           () =>
-            'Use the supplied coding tools and standard CLIs in the explicit workspace. Ask before installing packages, remote writes or pushes. Never read or display credentials. Android tools run within the app sandbox, not as root. Do not claim access to other apps or device settings.',
+            'Use the supplied coding tools and standard CLIs in the explicit workspace. Ask before installing packages, remote writes or pushes. Never read or display credentials. Android tools run within the app sandbox, not as root. Do not claim access to other apps or device settings.' +
+            (options.shellEnv?.PI_ANDROID_STATE
+              ? ' Android CLI setup: pi-pkg list; pi-pkg plan PACKAGE; pi-pkg install PACKAGE --yes. Honor existing owner authorization, otherwise ask before installation. gh uses the app-owned GitHub PAT after installation. If authentication is unavailable, ask the owner to configure it in the GitHub dialog; never inspect credentials, dump the environment, run gh auth token or put a token into a command.'
+              : ''),
         ),
       ],
     }),
@@ -88,7 +92,11 @@ export async function openKernel(options: OpenOptions): Promise<AppController> {
         env: ({ cwd = workspace }) => {
           let env = envs.get(cwd);
           if (!env) {
-            env = new NodeExecutionEnv({ cwd, shellPath: options.shellPath });
+            env = new NodeExecutionEnv({
+              cwd,
+              shellPath: options.shellPath,
+              shellEnv: options.shellEnv,
+            });
             envs.set(cwd, env);
           }
           return env;
@@ -201,6 +209,10 @@ export async function openKernel(options: OpenOptions): Promise<AppController> {
       case 'login':
         if (options.demo) throw new AppError('unsupported', 'デモは実認証を使用しません。');
         return { kind: 'dialog', dialog: 'auth' };
+      case 'github':
+        if (options.demo) throw new AppError('unsupported', 'デモは実認証を使用しません。');
+        if (args) throw new AppError('invalid_action', '/githubにPATを入力しないでください。');
+        return { kind: 'dialog', dialog: 'github' };
       case 'abort':
         return { type: 'abort', conversationId };
       case 'clear':
