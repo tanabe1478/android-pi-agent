@@ -113,4 +113,4 @@ packageのSHA-256はHTTPSで取得したindexを基準にします。独立し�
 - temporary Web Screen Wake Lockは検証後に解除し、ADB forwardsも削除。Android設定は変更しない
 - ユーザーの明示依頼により旧org.pimobile.appをuser 0から削除。新アプリのdataとMac上の参照リポジトリは保持し、旧PAT／会話は移行しない
 
-以上はcheckpoint5当時の検証です。現在は実機PiによるReadit clone／npm利用／分離preview／画像readも確認しています。実GitHubの失効／再認証失敗／解除、実CLI installの途中kill／電源断、他packageの互換性、実IME変換、実compactionは未検証です。[実作業での検証](readit-task.md)。
+以上はcheckpoint5当時の検証です。現在は実機PiによるReadit clone／npm利用／分離preview／画像readも確認しています。実GitHubの失効／再認証失敗／解除、実CLI installの途中kill／電源断、他packageの互換性、Pi composerの実IME変換、実compactionは未検証です。Readitでの実soft IME編集・保存はhost ADB操作で確認しました。[実作業での検証](readit-task.md)。

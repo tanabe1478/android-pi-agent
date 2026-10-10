@@ -122,4 +122,4 @@ Chrome指定時は360×780のデスクトップブラウザでもUIを検証し�
 
 新application IDは`io.github.tanabe1478.androidpi`、今回の表示名は`Android Pi`です。[Androidホスト・ビルド・保存領域・未検証範囲](docs/android.md)を参照してください。
 
-`0.7.4-tools`更新時は7会話・98確定エントリのdigest、選択／設定、ChatGPT／GitHub認証、追加gh／CLI registryとcore hashesを保持しました。その後のReadit taskは同じdurable会話へ新しい履歴を追加しています。旧`org.pimobile.app`は明示依頼でuser 0から削除しましたが、旧データ／認証の移行はせず、Macの参照リポジトリを保持しています。実IME変換、実ツール途中のkill、長時間backgroundなどは未検証です。
+`0.7.4-tools`更新時は7会話・98確定エントリのdigest、選択／設定、ChatGPT／GitHub認証、追加gh／CLI registryとcore hashesを保持しました。その後のReadit taskは同じdurable会話へ新しい履歴を追加しています。旧`org.pimobile.app`は明示依頼でuser 0から削除しましたが、旧データ／認証の移行はせず、Macの参照リポジトリを保持しています。Readitではhost ADBによる実soft keyboardのIME変換・削除・改行・保存も確認しました。Pi composerのIME変換、実指操作、実ツール途中のkill、長時間backgroundなどは未検証です。

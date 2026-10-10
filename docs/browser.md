@@ -81,3 +81,8 @@ Desktop Chrome：privateなfixture profileだけで、CLIのsnapshot／run／scr
 Galaxy：0.7.4-toolsへの更新時にidle／空draft／dialog・settingsなし／package lockなしを確認し、graceful stopとadb install -rを実施。7会話・98エントリ、確定entry digest、選択・model／thinking、ChatGPT／GitHub接続、Node／bash／git／xz／gh digest、CLI registryを保持しました。これは更新直前のbaselineであり、その後のtask入力・画像結果は意図的な新規履歴です。
 
 実モデルが標準CLIでReaditを起動・操作し、hardware PNGをreadへ渡して未知Canvas文字を照合できました。実finger gesture、cookie store分離の完全probe、draft保持を含む総合preview probe、release、WebGL／video、長時間background／途中killは別途検証します。[Readit taskでの区別](readit-task.md)。
+
+Readitの公開fixtureでは、host ADBが実soft keyboardのフリック・候補選択・削除・改行・
+Saveを操作し、保存前disk保持と正確な日本語bytesを確認しました。実機Piも保存後の
+Native PNGを一度readで確認しました。今回だけ明示許可されたhostのkeyboard画像は
+標準pi-browserの機能ではなく、Native screenshotは引き続きWebViewだけを撮影します。

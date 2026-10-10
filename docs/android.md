@@ -144,4 +144,6 @@ python3 -m unittest discover -s scripts -p 'test_*.py' -v
 - OAuthリンクのCDP clickは外部Activityへの遷移後にnavigation待ちがtimeoutしたが、実際にはChromeへ遷移済みだった。画面遷移の失敗と決めつけず、foreground componentと認証状態を独立に確認した
 - keyboard表示中のCDP screenshotには重複描画が出たため、それだけで実表示を判定しない。実際のADB screenshotをkeyboard候補／clipboardが出ない状態でapp領域だけcropして確認。実keyboardのlayoutは別途数値検証
 
-まだ未確認：実credentialの期限切れrefresh、実モデルcompaction、実IME変換、実ツール途中のhard kill・電源断、長時間background、デスクトップの複数process排他、クリーンなAndroid Pi依存取得。GitHub／gh追加と実機PiによるReadit／npm／Preview／画像読取を確認済みです。他package、WebGL／video、resource loader、巨大画像履歴のpagingは別の作業です。
+Readitの公開fixtureでは、host ADBで実Samsung soft keyboardを操作し、IME候補変換・確定後削除・改行・menu Saveと保存bytesを確認しました。本人の指操作でもPi composerのIME検証でもありません。
+
+まだ未確認：実credentialの期限切れrefresh、実モデルcompaction、Pi composerの実IME変換、実指操作、実ツール途中のhard kill・電源断、長時間background、デスクトップの複数process排他、クリーンなAndroid Pi依存取得。GitHub／gh追加と実機PiによるReadit／npm／Preview／画像読取を確認済みです。他package、WebGL／video、resource loader、巨大画像履歴のpagingは別の作業です。

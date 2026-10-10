@@ -29,6 +29,12 @@ commit／push／PRはまだ行わない。Android Piの会話は既存の単一d
     更新し、保存だけを一度再開。正確なC改行bytesとdirty=false、保存後画像を確認した。
 12. 新回帰testを隔離hostで旧CSSへ当て、両browserで期待したvisibility失敗を確認。
     修正CSSでmobile20件が成功した。既存Mac checkoutは引き続き未変更。
+13. ユーザーが今回だけ公開Readitとkeyboard／候補欄の確認を許可した後、host ADBの
+    touch injectionで実Samsung HoneyBoardを操作した。12keyのフリックと候補tapで
+    日本語へ変換・確定し、実削除keyで日本へ、改行後に確認を変換・確定して改行した。
+14. 保存前はdirty=true／disk 0 bytes。File menuのSaveを実tapし、dirty=falseと
+    `日本\n確認\n`の正確なUTF-8 14 bytesを確認した。実機Piも保存bytesを独立確認し、
+    Native WebView-only PNGを一度撮影して標準readで日本／確認／空行と保存表示を確認。
 
 ## 証拠の区別
 
@@ -39,13 +45,21 @@ commit／push／PRはまだ行わない。Android Piの会話は既存の単一d
   保存後bytes／dirty=falseを含む。新しいmenu回帰は旧CSSで両browserとも失敗した。
 - Android Pi本体：79 Node／browser／bundle＋6 Python＝85 tests。これにはnative sourceの
   view-only境界guardを含むが、Java文字列検査をAndroid実行testとは扱わない。
-- 実指のscroll／tap、日本語IMEの候補選択・変換、実soft keyboardの削除／改行は
-  未確認。合成InputEvent／compositionと混同しない。
+- Host支援の実機確認：ADB touch injectionによる実soft keyboardのフリック、IME候補
+  選択・変換・確定、確定後の削除／改行、menu Saveを確認。直接の日本語insertや
+  合成InputEventではない。実指のscroll／tap、Pi composer自体のIME変換は未確認。
+- trustedなcompositionstart／updateとinsertCompositionTextを確認したが、観測した
+  compositionendはtrusted=falseだった。発生元は未特定で、内部fallbackとは断定しない。
+  isTrustedだけでは実IME／本人操作と判定しない。
+  後置observerに届かない削除／改行もあり、文書遷移と実tapを併せて検証した。
+- Keyboard確認は今回だけの明示許可を受けたhost ADB画像であり、通常のpi-browserや
+  Android PiのNative screenshotにkeyboard／Window撮影を追加したものではない。
 - 旧software captureのCanvas欠落を修正。hardware経路でCanvas／PNGの背景pixelを
   確認し、実モデルもprompt／DOM text／phone sourceにないCanvas文字を画像だけから
   正しく回答した。任意のWebGL／video layerや長時間安定性までは保証しない。
-- 実機削除と保存はpublic fixture／合成eventsの検証。保存操作はReadit UIから行い、
-  Node fsでdisk bytesを確認した。直接fsの書込みでReadit保存を代替していない。
+- 最初の実機削除passはpublic fixture／合成eventsで、後のpassは実soft keyboardを使用。
+  保存操作はReadit UIから行い、Node fsでdisk bytesを確認した。
+  直接fsの書込みでReadit保存を代替していない。
 - 検証用markerは除去し、公開Readit Previewと所有serverは閲覧できるよう残している。
   private PID／readiness、PNG、fixture、実行履歴の詳細はgitへ入れない。
 
@@ -62,6 +76,10 @@ commit／push／PRはまだ行わない。Android Piの会話は既存の単一d
   今回は明示的なtask指示とabsolute pathsで補った。
 - 将来の更新もdraft、durable tasks／queue／compaction、package lock、Readitの未保存状態と
   所有serverを確認してから行う。lost responseでtaskやbrowser mutationを再送しない。
+  native preedit中はWasm dirty=falseでも入力がある。reload／open／更新前にはcomposingも
+  確認する。file選択後は対象tabとidleを待ち、直後の旧tabを結果と取り違えない。
+- 検証途中のbackground化とtemporary wake leaseの終了は別に記録する。既存taskへ復帰し、
+  入力結果を読んでから続行した。原因を自動lockと断定せず、security設定を変更しない。
 
 Readitのスマホ対応そのものは完了宣言していない。この実作業を回帰taskとして使い、
 実機coding／browser／編集・保存・復帰の不足を確認しながらAndroid Piを改善する。

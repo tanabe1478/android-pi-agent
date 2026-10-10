@@ -44,3 +44,8 @@
 - Node >=22.19.0; native TypeScript type stripping, no transpilation for runtime code.
 - `npm test`; `npm run check`; optional `PI_TEST_CHROME=/path/to/chrome npm test`.
 - On-device updates use `adb install -r` after checking active work. Routine updates to the new app are pre-authorized; do not clear app data or update the reference app.
+- Check Readit native preedit/composing as well as its document dirty flag before reload,
+  reopening or APK updates: dirty=false can coexist with uncommitted IME input. After selecting
+  a file, wait for the expected tab and idle state before checking or editing its contents.
+- Keep real software-IME interaction, Android injected keys/touches, synthetic composition
+  events and human finger input distinct. isTrusted alone does not establish the input source.
