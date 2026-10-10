@@ -2,7 +2,7 @@
 
 実行は引き続き一つのdurable Harness／CodingToolsです。GitHub認証はprofileサービス、pi-pkgは標準CLIであり、別のPi CLIやmodel／tool loopではありません。
 
-**host／mock／desktop browserの検証とAPK `0.5.0-cli` buildまで完了。端末がADB未接続のため、新APKのインストール、実GitHub認証、端末の実download／CLI追加は未検証です。** 旧アプリでの成功を新アプリの検証と扱いません。
+**61 host testsとAPK `0.5.1-cli` buildが成功し、Galaxyへデータ保持で更新済み。新profileへの実GitHub PAT保存、gh 2.102.0追加、private repositoryへのHTTPS git接続を確認しました。** 旧アプリでの成功や、実モデルの自律CLI選択とは区別します。
 
 ## GitHub認証
 
@@ -25,6 +25,7 @@
 
 - 標準gitを使い、GitHub HTTPSのUsername／Password要求だけをprivate askpassへ渡す
 - Node shebangを使い、Termuxのhard-coded shell pathに依存しない
+- Android prefixのlibexec/git-core／etc/tls/cert.pemをGIT_EXEC_PATH／GIT_SSL_CAINFOへ設定する。compiled Termuxの別package pathを使わず、TLS検証は無効にしない
 - PATをremote URL、argv、Git設定、gitの親shell環境へ入れない。askpassのstdoutはgitだけが消費する内部credential transportであり、ツールとして直接呼んで表示してはいけない
 - 子commandのcredential helper設定を空にし、別storeへcacheしない。ホスト／globalのgit configを変更しない
 - `github.com`以外、HTTP、別port、malformed promptへPATを返さない
@@ -74,9 +75,9 @@ private directory・no-follow・UIのmask・CLI制限は、誤表示・別host�
 
 packageのSHA-256はHTTPSで取得したindexを基準にします。独立したAPT署名検証は未実装です。APK／build inputsは既存と同じtrust rootであり、自己更新の完成や供給網全体の安全性を保証しません。
 
-## 今回の検証と次の実機確認
+## host検証
 
-全体は55 Node／browser／bundle＋6 Python＝61件、failure／skipなし。typecheck／format／diff check、90 production packagesのoffline bundle、minSdk26／targetSdk28のAPK buildを確認しました。新しいdependency download／install scriptsは実行していません。
+全体は55 Node／browser／bundle＋6 Python＝61件、failure／skipなし。typecheck／format／diff check、90 production packagesのoffline bundle、minSdk26／targetSdk28のAPK buildを確認しました。hostのNode依存・native baselineの新規download／install scriptsは実行していません。端末のgh取得は以下の実機確認で実施しました。
 
 - GitHub mock：公式endpoint／redirect禁止、private保存、再起動、失敗時保持、timeout／shutdown、stale／同時操作、確認付き解除、corrupt／symlink／oversize拒否
 - host git：実gitのcredential protocolをtest-only tokenで接続。ホスト設定変更なし、結果はtest memory内だけで検証
@@ -87,4 +88,18 @@ packageのSHA-256はHTTPSで取得したindexを基準にします。独立し�
 - packaged host：production-only appのboot／durable再開、GitHub API／generated helper、新追加sourceの一致
 - Python packaging：baseline metadataのrootfs mismatch拒否、再現性・依存closure・private/dev/host除外を含む
 
-次は端末接続後、idle／draft／lockを確認して`adb install -r`し、認証・会話・entry digestの保持を確認します。新profileへPATを明示的に設定し、実GitHubのread-only一覧、pi-pkgでghを追加して標準CLI経由で利用できることを検証します。旧アプリのPATやdataには触れません。browser preview移植、実IME変換、実compaction／途中killの検証はその後の別作業です。
+## Galaxyの実機確認
+
+- idle／空draft／package lockなしでgraceful stopし、`adb install -r`で0.5.0、修正後の0.5.1へ更新。6会話・16エントリ、確定entry digest、選択・model／thinking、ChatGPT認証を保持
+- ユーザー指定の1Password itemからPATをsecret-aware経路で取得し、新profile専用APIへ一度だけ設定。値をログ、argv、URL、会話へ出さず、旧アプリのcredential fileは読まない
+- pi-pkgで68件のnative baselineを照合し、実index／archive取得とgh 2.102.0の追加に成功。初回install後はregistryを読み、保存済みinstallを繰り返さない
+- 本番と同じinstallGitTools／NodeExecutionEnv設定で標準CLIを実行。実ghでアカウントを確認し、20 repositories中4 privateを取得。private repoの名前・URL・refsは表示／記録せず、HTTPS git ls-remoteの成功だけを確認
+- 初回gitはcompiled Termuxのexec pathを参照して失敗。新prefixのGIT_EXEC_PATH／GIT_SSL_CAINFOで補正し、修正APKではcommand側の追加指定なしで成功。git設定やbaseline binaryを書き換えたのではない
+- Node／bash／git／xzのdigestはCLI追加前後で一致。private認証／registryは0600、正常終了時のpackage lock解除を確認
+- gh追加後のAPK再更新でも、新PATとghを保持。新しいPAT保存やCLI installを再実行せず、保存済み状態から接続を確認
+- GalaxyのGitHub管理dialogを開閉し、password型・空欄のまま、ChatGPT login非表示、page overflow／JS errorなしを確認。秘密をUIやclipboardへ貼る自動操作はしない
+- 検証で新しいmodel input、remote write／push、cloneは行わない。会話・選択・設定・usageに差分なし。直接NodeExecutionEnvの検証であり、実モデルがghを自律選択した証明ではない
+- temporary Web Screen Wake Lockは検証後に解除し、ADB forwardsも削除。Android設定は変更しない
+- ユーザーの明示依頼により旧org.pimobile.appをuser 0から削除。新アプリのdataとMac上の参照リポジトリは保持し、旧PAT／会話は移行しない
+
+実GitHubの失効／再認証失敗／解除、実CLI installの途中kill／電源断、他packageの互換性、実モデルによる自律CLI選択は未検証。browser preview移植、実IME変換、実compaction／途中killは次の別作業です。

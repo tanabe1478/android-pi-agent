@@ -1,6 +1,8 @@
 # Androidホスト（チェックポイント5）
 
-`0.5.0-cli`（versionCode 4）のoffline APK buildが成功。GitHub profile認証、git／gh、pi-pkgを追加しました。**端末はADB未接続で、新APKは未インストール。実GitHub保存／通信、実端末へのCLI追加は未検証です。** host検証は55 Node／browser／bundle＋6 Python＝61件、failure／skipなし。参照依存・native assetsは読み取り専用、追加download／install scriptsは実行していません。[CLIの検証範囲](cli.md)を参照してください。
+`0.5.1-cli`（versionCode 5）のoffline APK buildが成功し、Galaxyへデータ保持で更新済み。GitHub profile認証、git／gh、pi-pkgを追加し、実PAT保存、gh 2.102.0追加、private GitHubのread-only利用を確認しました。host検証は55 Node／browser／bundle＋6 Python＝61件、failure／skipなし。host依存・native baselineは参照側から読み取り専用で利用し、端末のghだけpi-pkgで取得しました。[CLIの検証範囲](cli.md)を参照してください。
+
+更新時にidle／空draft／package lockなしを確認し、6会話・16エントリとentry digest、選択・ChatGPT認証を保持。gh追加後の再更新でもGitHub認証・CLIを保持しました。gitのcompiled Termux pathをGIT_EXEC_PATH／GIT_SSL_CAINFOで補正し、更新後はcommand側の追加指定なしでprivate ls-remoteが成功しました。Node／bash／git／xzのdigestはCLI追加の前後で一致、private metadataは0600、package lockは正常解除。CLI検証でモデル入力は送信していません。
 
 ## 前のPi型UIの実機検証
 
@@ -16,7 +18,7 @@ Pi型UIの区切りでのhost検証は36 Node／browser／bundle＋5 Python＝41
 - 表示名：`Android Pi`（前のデモから変更。application ID／dataは同じ）
 - `compileSdk 35` / `minSdk 26` / **`targetSdk 28`**
 - debug APK。通常のAndroid debug署名を利用し、鍵はリポジトリへ入れない
-- 旧`org.pimobile.app`を更新・終了・初期化しない。会話／認証の自動移行もしない
+- 旧`org.pimobile.app`はユーザーの明示依頼で端末のuser 0から削除済み。新アプリのdataとMacの参照リポジトリは保持。会話／認証の自動移行はしない
 
 アプリの`files/`以下：
 
@@ -127,7 +129,7 @@ python3 -m unittest discover -s scripts -p 'test_*.py' -v
 - 作成したfixture fileと空directoryだけを片付け、会話の検証履歴は保持。旧アプリや既存workspace fileは変更しない
 - 実認証の期限切れrefreshは未検証。host mockでのrefresh成功と、新規／保存済み実credentialでの推論成功を混同しない
 
-旧アプリのデータ・認証・設定／権限は変更していません。ADB forwardsは検証後に削除し、private screenshots・SQLite・launcherをgitへ入れていません。今回のログイン中はブラウザのDOM／画面／callback URLを取得しませんでした。
+この認証チェックポイント当時は旧アプリのデータ・認証・設定／権限を変更していません。後のcheckpoint5で、ユーザーの明示依頼により旧アプリだけをuser 0から削除しました。ADB forwardsは検証後に削除し、private screenshots・SQLite・launcherをgitへ入れていません。ログイン中はブラウザのDOM／画面／callback URLを取得しませんでした。
 
 実機で分かった差分：
 
@@ -136,4 +138,4 @@ python3 -m unittest discover -s scripts -p 'test_*.py' -v
 - OAuthリンクのCDP clickは外部Activityへの遷移後にnavigation待ちがtimeoutしたが、実際にはChromeへ遷移済みだった。画面遷移の失敗と決めつけず、foreground componentと認証状態を独立に確認した
 - keyboard表示中のCDP screenshotには重複描画が出たため、それだけで実表示を判定しない。実際のADB screenshotをkeyboard候補／clipboardが出ない状態でapp領域だけcropして確認。実keyboardのlayoutは別途数値検証
 
-まだ未確認：実credentialの期限切れrefresh、実モデルcompaction、実IME変換、実ツール途中のhard kill・電源断、長時間background、デスクトップの複数process排他、クリーンなnpm依存取得。GitHub／on-demand CLIの実機確認、browser移植／resource loaderなどの広い機能対応は別の作業。
+まだ未確認：実credentialの期限切れrefresh、実モデルcompaction、実IME変換、実ツール途中のhard kill・電源断、長時間background、デスクトップの複数process排他、クリーンなnpm依存取得。GitHub／gh追加の実機確認は今回完了。実モデルの自律GitHub CLI選択、他packageの互換性、browser移植／resource loaderなどは別の作業。

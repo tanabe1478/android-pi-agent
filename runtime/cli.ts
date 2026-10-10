@@ -214,6 +214,9 @@ child.on('exit', code => {
     env.PATH = `${bin}:${prefix}/bin:${process.env.PATH ?? '/system/bin'}`;
     env.PREFIX = prefix;
     env.PI_ANDROID_STATE = stateDir;
+    // Git's compiled Termux paths still point at a different package identity.
+    env.GIT_EXEC_PATH = path.join(prefix, 'libexec/git-core');
+    env.GIT_SSL_CAINFO = path.join(prefix, 'etc/tls/cert.pem');
   }
   return env;
 }

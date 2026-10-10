@@ -72,7 +72,7 @@ GitHubもprofileサービスで、会話やagent backendではありません。
 
 `runtime/cli.ts`の生成launcherとgit askpassはprofile専用。tokenをGit URL／config／argvへ入れず、gitの親shell環境へも渡しません。gh native childだけへGH_TOKENを供給し、認証表示・別host・別認証store・alias／extensionを制限します。同じUIDの任意コードからの隔離ではありません。
 
-Android serviceが明示するprefixを、CodingToolsのNodeExecutionEnv.shellEnvへ渡します。pi-pkgは別のmodel loopを持たない標準CLIで、native baseline receiptと照合した追加registryを持ちます。APK更新と同じくusrの既存filesを保護し、maintainer scriptsやbaseline更新は実行しません。詳細は[CLIの境界](cli.md)。
+Android serviceが明示するprefixを、CodingToolsのNodeExecutionEnv.shellEnvへ渡します。Gitのcompiled Termux pathにはGIT_EXEC_PATH／GIT_SSL_CAINFOを新prefixへ設定し、TLS検証を維持します。pi-pkgは別のmodel loopを持たない標準CLIで、native baseline receiptと照合した追加registryを持ちます。APK更新と同じくusrの既存filesを保護し、maintainer scriptsやbaseline更新は実行しません。詳細は[CLIの境界](cli.md)。
 
 ## Piを基本にする表示
 
@@ -83,7 +83,7 @@ usageはdurableの累計を表示し、context占有率と混同しない。[UI�
 
 ## Android
 
-targetSdk 28の既存の実行方式を維持する。最新targetSdk／Play対応を先行課題にしない。`io.github.tanabe1478.androidpi`という別アプリIDとデータ領域を使い、参照アプリを上書き・初期化しない。
+targetSdk 28の既存の実行方式を維持する。最新targetSdk／Play対応を先行課題にしない。`io.github.tanabe1478.androidpi`という別アプリIDとデータ領域を使い、旧会話・認証を自動移行しない。旧アプリはcheckpoint5でユーザーの明示依頼によりuser 0から削除し、Macの参照リポジトリは保持した。
 
 foreground serviceがassetsをprivate stagingへ展開し、flockを保持してNodeへexecする。Activityはprivate ready recordから接続し、UIとkernelのAPIは同じまま使う。`usr/`の初回baselineと更新できる`app/`を分け、home・workspace・SQLiteを保持する。
 

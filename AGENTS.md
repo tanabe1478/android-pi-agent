@@ -8,7 +8,7 @@
 - Base layout and interaction on ordinary Pi: flat transcript, thinking/tools, bottom editor and footer, slash commands. Use mobile-specific controls where touch, IME or narrow screens need them; do not default to a generic web-chat design.
 - Preserve targetSdk 28 and the proven app-private Termux executable layout. Play/general-distribution compatibility is not a requirement.
 - Keep the reference repository and its uncommitted work intact. Never push its upstream.
-- New package identity and storage are separate from `org.pimobile.app`. No implicit conversation or credential migration.
+- New package identity and storage are separate from `org.pimobile.app`. No implicit conversation or credential migration. The owner explicitly requested removal of the old Android app in checkpoint 5; it was removed from user 0 only. Preserve the host reference repository.
 
 ## Boundaries
 

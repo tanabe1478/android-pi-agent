@@ -271,6 +271,8 @@ test('private pi-pkg launcher does not replace usr binaries and requires explici
   await writeFile(path.join(f.prefix, 'bin/gh'), 'KEEP_NATIVE');
   await writeFile(path.join(f.root, 'package.json'), JSON.stringify({ type: 'module' }));
   const env = await installGitTools(f.stateDir, f.prefix);
+  assert.equal(env.GIT_EXEC_PATH, path.join(f.prefix, 'libexec/git-core'));
+  assert.equal(env.GIT_SSL_CAINFO, path.join(f.prefix, 'etc/tls/cert.pem'));
   assert.equal(await readFile(path.join(f.prefix, 'bin/gh'), 'utf8'), 'KEEP_NATIVE');
   const run = promisify(execFile);
   const launcher = path.join(f.stateDir, 'bin/pi-pkg');
