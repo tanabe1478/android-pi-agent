@@ -2,9 +2,9 @@
 
 個人用のAndroidローカルPi環境。`pi-durable`を唯一のエージェントバックエンドにし、`pi-tui`の設計を参考に、タッチ・IME向けの操作画面を作ります。
 
-**チェックポイント3：Galaxyで新アプリ専用ChatGPTログイン、`openai/gpt-6.1-sol`の実推論、実モデルが選択したwrite/read/bashを確認。service再起動後も認証・会話・モデル／思考を保持しています。**
+**チェックポイント4：通常のPiに近い、フラットな本文・思考／ツール表示・下部エディタ／フッターへ変更。スマホ向けの送信・停止・touch操作とIME guardを残します。41テストとAPK buildが成功し、Galaxyへデータ保持で更新済み。消灯・ロック中のため新UIの実機操作確認は保留です。**
 
-ホストの34テスト、前のfauxデモ、今回の実モデル確認は検証範囲を分けます。期限切れcredentialの実refreshやPiの全機能互換を確認した、という意味ではありません。
+前の区切りではGalaxyでChatGPTログイン、`openai/gpt-6.1-sol`の実推論、実モデルが選ぶwrite/read/bash、service再起動後の復元を確認しました。今回のUI検証や、期限切れcredentialの実refresh・Pi全機能互換とは区別します。
 
 ```text
 Android向けUI（ブラウザとGalaxy WebViewで最小操作を検証）
@@ -20,14 +20,15 @@ SQLite / 明示的な作業ディレクトリ
 
 ## この区切りでできること
 
-- Android foreground service、private assets展開、Node起動、認証付きWebView接続。別IDの`0.3.0-auth` APKをGalaxyへデータ保持で更新
+- Android foreground service、private assets展開、Node起動、認証付きWebView接続。別IDの`0.4.0-ui` APKをGalaxyへデータ保持で更新
 - 端末のCodingToolsによるwrite/read/bash、会話保存、service停止／再開、idle owner kill後の復元を確認（fauxのscripted fixture）
 - ChatGPT OAuthの開始・外部ブラウザ・取消・5分timeout・手動callback fallback。認証済みのログイン表示を隠し、操作メニューから再認証
 - 実機でChromeへの遷移とユーザーのChatGPTログイン、実モデルの短い応答、回答中の日本語＋emoji draft／focus保持を確認
 - 実モデルが既存CodingToolsを`write → read → bash`の順に選択し、専用fixture directoryで成功。service再起動後の認証利用も確認
 - 新profile専用の0600認証ファイル、stable installation ID、pi-aiによる直列化したtoken refresh。旧アプリ／ホストPiの認証やambient API keyは使わない
 - fauxモデルによるローカルデモ（`--demo`。実認証ファイルや外部モデルAPIを使わない）
-- ストリーミング状態・思考・ツール結果の表示、生成中の入力保持
+- Pi型のフラットなMarkdown本文、思考表示、call/resultをまとめたツール表示と展開保持。下部にエディタとcwd／session／model／thinking／累積usage
+- ストリーミング状態・思考・ツール結果の表示、生成中の入力保持。Enterは改行、送信button／Ctrl+Enterを使用。スマホ向けの違いは[UI方針](docs/ui.md)
 - 送信、steering／follow-up、入力キュー取消、停止
 - モデル・思考レベル変更、会話作成・切替・命名・過去のユーザー入力からのfork
 - SQLite再オープンによる会話・設定・選択の復元
@@ -97,4 +98,4 @@ Chrome指定時は360×780のデスクトップブラウザでもUIを検証し�
 
 新application IDは`io.github.tanabe1478.androidpi`、今回の表示名は`Android Pi`です。[Androidホスト・ビルド・保存領域・未検証範囲](docs/android.md)を参照してください。
 
-実モデル版`0.3.0-auth`は端末へ更新済みです。更新前の5会話・確定済み3エントリを保持し、別の「実モデル確認」会話で検証しました。旧アプリ・会話・認証は移行／変更していません。実IMEの日本語変換、実ツール途中のkill、長時間backgroundなどは未検証です。
+`0.4.0-ui`は端末へ更新済みで、今回の更新前後で認証・選択・6会話・16エントリを保持しました。新UIの端末操作確認はロック解除待ちです。旧アプリ・会話・認証は移行／変更していません。実IMEの日本語変換、実ツール途中のkill、長時間backgroundなども未検証です。

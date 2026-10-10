@@ -66,6 +66,13 @@ AppViewには非secretのAuthSummaryだけを追加します。OAuth URL／manua
 
 既存認証を保持したまま再認証でき、5分timeout／取消／shutdownでloginを終了します。UIのconnectedは保存済み認証の存在を示すため、実token refresh／実推論の成功を証明する表示ではありません。logout UIや他providerは別の区切りです。
 
+## Piを基本にする表示
+
+画面は通常Piの配置・操作感を基本にし、mobileで難しい部分だけ変更する。
+フラットな本文、thinking、tool call/result、下部editor／footerとslash commandsを使う。
+IME誤送信を防ぐためEnterは改行のままで、touchの送信・停止・menuを残す。
+usageはdurableの累計を表示し、context占有率と混同しない。[UI方針と検証](ui.md)を参照。
+
 ## Android
 
 targetSdk 28の既存の実行方式を維持する。最新targetSdk／Play対応を先行課題にしない。`io.github.tanabe1478.androidpi`という別アプリIDとデータ領域を使い、参照アプリを上書き・初期化しない。

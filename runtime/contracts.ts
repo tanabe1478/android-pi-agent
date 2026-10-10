@@ -52,7 +52,7 @@ export type Action =
 export type ActionResult =
   | { kind: 'done' }
   | { kind: 'accepted'; operationId: number }
-  | { kind: 'dialog'; dialog: 'models' | 'thinking' | 'sessions' | 'help' }
+  | { kind: 'dialog'; dialog: 'models' | 'thinking' | 'sessions' | 'help' | 'auth' }
   | { kind: 'confirmation'; conversationId: number; token: string; message: string };
 
 export interface AppController {

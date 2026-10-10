@@ -1,4 +1,4 @@
-# 機能対応表（チェックポイント3）
+# 機能対応表（チェックポイント4）
 
 検証環境を各行と[Androidの検証範囲](android.md)で区別する。「実装済み」は端末Piと完全に同じ意味を保証する表示ではない。
 
@@ -6,14 +6,15 @@
 | --- | --- | --- |
 | モデル呼び出し・coding tools | 既存実装を利用・実機確認 | durableとCodingTools。Galaxyで実`openai/gpt-6.1-sol`の応答と、実モデルが選んだwrite/read/bashを専用fixtureで確認 |
 | ストリーミング表示 | 実装済み | committed viewを表示。ドラフトを維持 |
-| thinking・tool結果表示 | 最小実装 | 展開できる。装飾・専用renderer・usage表示は未整備 |
+| Pi型UI・thinking・tool結果表示 | DOMへ適応 | フラットなMarkdown本文、思考折りたたみ、tool call/result pairingとpreview、下部editor／footer。専用extension rendererは未対応。新UI実機操作はロック解除待ち |
+| usage表示 | 累計のみ実装 | durableのpi.usageを表示。reasoningはoutputの内数。context占有率は未取得、参考costは実請求とは扱わない |
 | モデル・思考レベル | 実装済み | 登録モデルの変更・検索・対応レベル検証・再オープン復元。実機でgpt-6.1-sol／lowを確認。他モデルの利用可否は未検証 |
 | 会話作成・切替・命名 | 実装済み | 同じdurable SQLiteのcatalog。明示的な対象ID |
 | fork | durable向けに適応 | ユーザー入力地点から別会話を作成。CLIの同一ファイル内tree navigationとは異なる |
 | clear | 実装済み | 文脈リセット。確認・busy guard・履歴保持。旧履歴の閲覧UIは未実装 |
 | compaction | 最小接続 | 要求・live状態・停止。完了結果の専用通知や実モデル要約の検証は未実施 |
 | steering / follow-up | 実装済み | durableの入力キューに入れる。取消・abort。個別編集は未実装 |
-| slash completion | 実装済み | 共通catalogの9コマンド。未知のコマンドは拒否 |
+| slash completion | 実装済み | 共通catalogの10コマンド（/login追加）。説明付きリストとArrow／Tab／tap選択。未知のコマンドは拒否 |
 | workspace | 最小実装 | 起動時に明示、realpath確認、会話作成時に引継ぎ。picker／変更UIは未実装 |
 | skills / AGENTS.md読込み | 未対応 | 既存Piのloader／prompt生成を再利用できる境界を整える |
 | prompt templates | 未対応 | 引数展開とresource discoveryを共通側へ接続 |

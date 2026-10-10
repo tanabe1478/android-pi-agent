@@ -2,6 +2,7 @@ import { COMMANDS, suggestions } from '/shared/commands.js';
 import { Client } from './client.js';
 import { Transcript, Dialog, activityOf, busyOf, element, button } from './components.js';
 import { AuthenticationPanel } from './auth.js';
+import { usageOf, formatTokens, shortPath } from './presentation.js';
 
 const $ = id => document.getElementById(id);
 
@@ -23,6 +24,7 @@ let sending = false;
 let draftRevision = 0;
 let connected = false;
 let errorMessage = '';
+let completionIndex = 0;
 
 const authentication = new AuthenticationPanel(
   client,
@@ -41,7 +43,10 @@ function status() {
     (!connected ? '再接続しています…' : view ? activityOf(view) : '接続しています…');
   $('message').disabled = !view || !connected;
   $('send').disabled = !view || !connected || sending;
-  $('abort').disabled = !view || !connected || !busyOf(view);
+  const busy = view && busyOf(view);
+  $('abort').disabled = !connected || !busy;
+  $('abort').hidden = !busy;
+  $('composer').classList.toggle('busy', Boolean(busy));
 }
 
 function render(next) {
@@ -67,7 +72,13 @@ function render(next) {
     ? `${agent.model.provider}/${agent.model.modelId}`
     : 'モデルを選択';
   $('thinking').textContent = agent.thinkingLevel ?? 'off';
-  $('workspace').textContent = agent.cwd ?? '';
+  $('composer').dataset.thinking = agent.thinkingLevel ?? 'off';
+  $('workspace').textContent = shortPath(agent.cwd);
+  $('workspace').title = agent.cwd ?? '';
+  const usage = usageOf(view);
+  $('usage').textContent = `↑${formatTokens(usage.input)} ↓${formatTokens(usage.output)}`;
+  $('usage').title =
+    `累積使用量: input ${usage.input}, output ${usage.output}（context使用率ではありません）`;
 
   transcript.render(view);
 
@@ -122,11 +133,26 @@ function showDialog(kind, conversationId = view?.activeId) {
 
   if (kind === 'auth') {
     authentication.open();
+  } else if (kind === 'usage') {
+    const usage = usageOf(view);
+    dialog.show('累積使用量', [
+      element('p', `input ↑${usage.input} / output ↓${usage.output}`),
+      element('p', `cache read ${usage.cacheRead} / write ${usage.cacheWrite}`),
+      element('p', `reasoning ${usage.reasoning}（outputの内数）`),
+      element('p', `参考cost $${usage.cost.toFixed(4)}（実際の請求額ではありません）`),
+      element('p', 'pi.usageの確定累計です。context占有率はまだ取得していません。'),
+    ]);
+  } else if (kind === 'workspace') {
+    dialog.show('作業ディレクトリ', [
+      element('p', view.conversation.docs['pi.agent']?.cwd ?? ''),
+      element('p', '現在は起動時のworkspaceを利用します。変更UIは未対応です。'),
+    ]);
   } else if (kind === 'help') {
-    dialog.show(
-      '操作一覧',
-      COMMANDS.map(command => element('p', `/${command.name} — ${command.description}`)),
-    );
+    dialog.show('操作一覧', [
+      element('p', 'Enter 改行 · Ctrl/Cmd+Enter 送信 · Alt+Enter follow-up'),
+      element('p', 'Ctrl+L モデル · Ctrl+T 思考表示 · Ctrl+O ツール展開 · Escape 停止'),
+      ...COMMANDS.map(command => element('p', `/${command.name} — ${command.description}`)),
+    ]);
   } else if (kind === 'models') {
     const search = element('input');
     search.setAttribute('aria-label', 'モデルを検索');
@@ -197,22 +223,38 @@ function showDialog(kind, conversationId = view?.activeId) {
   }
 }
 
+function resizeEditor() {
+  const editor = $('message');
+  editor.rows = innerHeight < 500 ? 1 : 2;
+  editor.style.height = 'auto';
+  const maximum = Number.parseFloat(getComputedStyle(editor).maxHeight);
+  editor.style.height = `${Math.min(editor.scrollHeight, maximum)}px`;
+}
+
+function chooseCompletion(candidate) {
+  $('message').value = `/${candidate.name} `;
+  draftRevision++;
+  $('message').focus();
+  complete();
+  resizeEditor();
+}
+
 function complete() {
   const items = suggestions($('message').value);
+  completionIndex = 0;
   $('suggestions').hidden = !items.length;
   $('suggestions').replaceChildren(
-    ...items.map(command =>
-      button(`/${command.name}`, () => {
-        $('message').value = `/${command.name} `;
-        draftRevision++;
-        $('message').focus();
-        complete();
-      }),
-    ),
+    ...items.map((command, index) => {
+      const row = button(`/${command.name}`, () => chooseCompletion(command));
+      row.setAttribute('aria-label', `/${command.name}`);
+      row.append(element('span', command.description, 'command-description'));
+      row.classList.toggle('selected', index === completionIndex);
+      return row;
+    }),
   );
 }
 
-async function submit() {
+async function submit(mode = $('input-mode').value) {
   if (!view || sending || !connected) return;
 
   const text = $('message').value;
@@ -227,13 +269,14 @@ async function submit() {
     type: 'input',
     conversationId,
     text,
-    mode: $('input-mode').value,
+    mode,
   });
 
   // Even retyping identical text is a new draft; string equality alone loses it.
   if (accepted && draftRevision === admittedRevision && $('message').value === text) {
     $('message').value = '';
     complete();
+    resizeEditor();
   }
 
   sending = false;
@@ -248,24 +291,43 @@ $('composer').addEventListener('submit', event => {
 $('message').addEventListener('input', () => {
   draftRevision++;
   complete();
+  resizeEditor();
 });
 $('message').addEventListener('keydown', event => {
-  if (event.isComposing) return; // Never intercept Japanese/Chinese/Korean IME confirmation.
+  if (event.isComposing || event.keyCode === 229) return;
 
-  if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+  if (event.key === 'Enter' && (event.ctrlKey || event.metaKey || event.altKey)) {
     event.preventDefault();
-    void submit();
+    void submit(event.altKey ? 'followUp' : $('input-mode').value);
+  }
+  const items = suggestions($('message').value);
+  if ($('suggestions').hidden || !items.length) return;
+  if (['ArrowDown', 'ArrowUp'].includes(event.key)) {
+    event.preventDefault();
+    const direction = event.key === 'ArrowDown' ? 1 : -1;
+    completionIndex = (completionIndex + direction + items.length) % items.length;
+    [...$('suggestions').children].forEach((row, index) => {
+      row.classList.toggle('selected', index === completionIndex);
+      if (index === completionIndex) row.scrollIntoView({ block: 'nearest' });
+    });
   }
   if (event.key === 'Tab') {
-    const candidate = suggestions($('message').value)[0];
-    if (candidate) {
-      event.preventDefault();
-      $('message').value = `/${candidate.name} `;
-      draftRevision++;
-      complete();
-    }
+    event.preventDefault();
+    chooseCompletion(items[completionIndex]);
   }
 });
+
+$('command').addEventListener('click', () => {
+  // A touch shortcut must never replace an existing draft with a slash command.
+  if ($('message').value) return showDialog('help');
+  $('message').value = '/';
+  draftRevision++;
+  $('message').focus();
+  complete();
+  resizeEditor();
+});
+$('usage').addEventListener('click', () => showDialog('usage'));
+$('workspace').addEventListener('click', () => showDialog('workspace'));
 
 $('login').addEventListener('click', () => showDialog('auth'));
 $('models').addEventListener('click', () => showDialog('models'));
@@ -280,6 +342,17 @@ $('menu').addEventListener('click', () => {
   const conversationId = view.activeId;
   dialog.show('操作', [
     button('ヘルプ', () => showDialog('help', conversationId)),
+    button('/model モデル', () => showDialog('models', conversationId)),
+    button('/thinking 思考レベル', () => showDialog('thinking', conversationId)),
+    button('/resume 会話', () => showDialog('sessions', conversationId)),
+    button(transcript.showThinking ? '思考を折りたたむ' : '思考を表示', () => {
+      transcript.toggleThinking();
+      dialog.close();
+    }),
+    button(transcript.expandTools ? 'ツール結果を折りたたむ' : 'ツール結果を展開', () => {
+      transcript.toggleTools();
+      dialog.close();
+    }),
     ...(view.auth
       ? [
           button(view.auth.connected ? 'ChatGPTを再認証' : 'ChatGPTログイン', () =>
@@ -306,13 +379,26 @@ $('menu').addEventListener('click', () => {
 });
 
 window.addEventListener('keydown', event => {
-  if (event.isComposing || event.key !== 'Escape' || $('dialog').open) return;
+  if (event.isComposing || event.keyCode === 229 || event.defaultPrevented || $('dialog').open)
+    return;
+  if ((event.ctrlKey || event.metaKey) && ['l', 'o', 't'].includes(event.key.toLowerCase())) {
+    event.preventDefault();
+    if (event.key.toLowerCase() === 'l') showDialog('models');
+    if (event.key.toLowerCase() === 'o') transcript.toggleTools();
+    if (event.key.toLowerCase() === 't') transcript.toggleThinking();
+    return;
+  }
+  if (event.key !== 'Escape') return;
   if (!$('suggestions').hidden) {
     $('suggestions').hidden = true;
     return;
   }
   if (view && busyOf(view)) void dispatch({ type: 'abort', conversationId: view.activeId });
 });
+
+window.addEventListener('resize', resizeEditor);
+window.visualViewport?.addEventListener('resize', resizeEditor);
+resizeEditor();
 
 // Reconnect reads fresh views; leaving the page disposes transport and components.
 void client.watch(render, connection => {

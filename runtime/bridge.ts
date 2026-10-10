@@ -165,6 +165,9 @@ export async function createBridge(
         '/components.js': 'ui/components.js',
         '/client.js': 'ui/client.js',
         '/auth.js': 'ui/auth.js',
+        '/markdown.js': 'ui/markdown.js',
+        '/presentation.js': 'ui/presentation.js',
+        '/vendor/marked.js': 'ui/vendor/marked.js',
         '/style.css': 'ui/style.css',
         '/shared/commands.js': 'shared/commands.js',
       };

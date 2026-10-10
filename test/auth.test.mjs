@@ -373,6 +373,12 @@ test(
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(bridge.url + '/#token=test-only-browser-header');
+      await page.waitForFunction(() => !document.getElementById('message').disabled);
+      await page.locator('#message').fill('/login');
+      await page.getByRole('button', { name: '送信', exact: true }).click();
+      await page.getByRole('heading', { name: 'ChatGPT認証' }).waitFor();
+      assert.equal(a.faux.state.callCount, 0);
+      await page.getByRole('button', { name: '閉じる', exact: true }).click();
       await page.getByRole('button', { name: 'ChatGPTログイン', exact: true }).click();
       await page.getByRole('button', { name: 'ChatGPTログインを開始', exact: true }).click();
       await page.getByRole('link', { name: '外部ブラウザで続ける' }).waitFor();

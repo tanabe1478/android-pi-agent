@@ -1,4 +1,8 @@
-# Androidホスト（チェックポイント3）
+# Androidホスト（チェックポイント4）
+
+`0.4.0-ui`をGalaxyへデータ保持で更新。新UIは[Piを基本にしたAndroid表示](ui.md)を参照してください。認証・選択・6会話・16エントリの保持と確定entry比較の一致を確認しました。消灯・ロック中でWebViewの新UI操作／keyboardの最終確認は保留です。
+
+今回のhost検証は36 Node／browser／bundle＋5 Python＝41件、failure／skipなし。APKのoffline buildとID／SDK確認も成功しています。以下の実認証／実推論記録は前の`0.3.0-auth`での確認です。
 
 **Galaxy SM-S931Zへ`0.3.0-auth`をデータ保持で更新し、新アプリ専用ChatGPTログイン・`openai/gpt-6.1-sol`の実推論・実モデルによるCodingTools選択／実行を確認しました。service再起動後も認証・会話・モデル／思考を保持。実IMEの手入力・変換や実ツール途中のkillまで完了したとは扱いません。**
 
@@ -80,9 +84,9 @@ packagerは独自lockのproduction依存closureだけを選び、各versionを�
 
 借用treeにはoptionalな`@esbuild/android-arm64`がありません。今回のデモはNodeのネイティブTS strippingを利用して起動でき、Android用esbuildを利用する動的コンパイル機能は未対応です。optional不足はbundle manifestへ明記し、勝手に取得しません。クリーンな`npm ci`はまだ未検証です。
 
-## 検証の区別
+## 前の認証チェックポイントの検証
 
-今回のhost検証は**29 Node／browser／bundleテスト＋5 Pythonテスト＝34件、failure／skipなし**。typecheckとdebug APK `0.3.0-auth`のoffline buildが成功し、APKのapplication ID／minSdk 26／targetSdk 28を確認しました。以下のAndroid／実モデル確認は、それとは別に端末上で実施しています。
+認証チェックポイントのhost検証は**29 Node／browser／bundleテスト＋5 Pythonテスト＝34件、failure／skipなし**。typecheckとdebug APK `0.3.0-auth`のoffline buildが成功し、APKのapplication ID／minSdk 26／targetSdk 28を確認しました。以下のAndroid／実モデル確認は、それとは別に端末上で実施しています。
 
 ```sh
 npm run check
