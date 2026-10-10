@@ -1,5 +1,12 @@
 # Androidホスト（チェックポイント6）
 
+`0.7.5-sync`（versionCode 14）をデータ保持で更新。既存更新streamが止まり、正常な返信が
+UIへ出ない症状に対するSSE取消／再接続とreadonly refreshを追加した。91 tests、typecheck、
+offline buildが成功。実機でも専用streamだけの再接続を確認し、7会話・227確定entryの
+全digest、選択／model／thinking、ChatGPT／GitHub、CLI registry／core hashesを保持した。
+入力を再送せず、所有Readit serverも更新後に一度再起動して保存済みpublic fixtureを保持。
+停止原因や長期間の復旧保証とは区別する。[表示と再接続](ui.md)。
+
 `0.7.4-tools`（versionCode 13）をGalaxyへデータ保持で更新済み。更新直前にidle／空draft／dialog・settingsなし／package lockなしを確認してgraceful stop／adb install -rを実施し、7会話・98エントリのdigest、選択／設定、ChatGPT／GitHub認証、追加gh／CLI registryとcore digestsを保持しました。実機Piで標準npm／npx、公開Readitの起動・Preview、hardware PNG／画像だけのCanvas文字照合まで確認しています。[分離preview／画像read](browser.md)、[Readit task](readit-task.md)を参照。
 
 ## 前のGitHub／CLI実機検証

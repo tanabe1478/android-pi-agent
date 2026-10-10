@@ -1,6 +1,6 @@
 # Piを基本にしたAndroid表示
 
-## 現在の配置（0.7.4-tools、0.7.3-uiの配置を維持）
+## 現在の配置（0.7.5-sync、0.7.3-uiの配置を維持）
 
 - 履歴の先頭は16pxの`pi android client`。操作の説明文は置かず、履歴と一緒に
   スクロールして上へ消える。固定ヘッダーではない
@@ -23,6 +23,25 @@ footerの重複表示なし、composerは送信button一つ、水平overflowな�
 選択／設定／認証／CLIを保持した。標準npm／npxとPreviewのhardware画像化を改善し、
 実機Piが公開Readitの画像だけから未知Canvas文字を正しく読めた。巨大画像履歴の
 paging／全snapshotの軽量化は未対応で、UIが所有する新しい会話backendは追加しない。
+
+## 送信後の画面更新と再接続（0.7.5-sync）
+
+実機で、入力と正常なモデル応答がdurableへ保存されていても、UIだけが古いsnapshotを
+表示し続ける症状を確認した。認証切れではなく、既存の更新streamが進まない状態だった。
+新しいreadonly SSEは受信でき、送信を再実行せずにUI接続を復旧した。停止原因は未特定。
+文脈reset後の表示も正本へ合わせた。旧履歴／返信はSQLiteに保持されている。
+
+- 初回snapshotを完全に反映するまでは接続完了としない
+- 35秒間SSE bytes／heartbeatが届かなければreaderと専用signalを取消し、GETで再接続
+- 前面復帰でもSSEだけを張り直す。POSTのsignalや送信済み操作は取消／再送しない
+- 成功した操作の後はreadonly GETで表示をrefreshする。mutation成功を通信retryへ変えない
+- 接続待ちでも既存draft欄はeditableに保つ。disabledによるfocus／native preeditの中断を避け、
+  送信や設定のmutation controlsだけをsnapshot受信まで無効にする
+
+85 Node／browser／bundle＋6 Python＝91 testsとoffline APK buildが成功。無応答stream、
+前面復帰、POST一回だけ、draft／focus保持をmock／desktopで検証。Galaxyでも専用SSEの
+取消／張り直しとlifetime signal維持をreadonlyで確認し、新たなモデル入力は送っていない。
+7会話・227確定entryのdigest、選択／設定／認証／CLI registry／core hashesを保持した。
 
 以下のcheckpoint4実機記録は旧配置の検証記録であり、現在の配置とは区別する。
 
@@ -94,6 +113,7 @@ overflow検証済み、Galaxyの画像表示は未検証。[画像readとpreview
 - `ui/markdown.js`：Marked tokensから安全なDOMへ
 - `ui/presentation.js`：usage、path省略、tool title／call-result pairing
 - `ui/app.js`：入力、completion、selectors、keyboard／touch shortcuts
+- `ui/client.js`／`test/client.test.mjs`：SSE専用取消、idle監視、POST非再送、snapshot再取得
 - `test/presentation.test.mjs`：ledger、pairing、vendor hash、安全なMarkdown、
   展開保持、draft／IME guard、320／360幅・keyboard相当の403高さを検証
 
@@ -127,5 +147,6 @@ Galaxyへ`adb install -r`で更新し、認証・選択と6会話・16エント�
 - ブラウザ／keyboardの画像、clipboardや候補内容は取得しない。ADB forwardsも解除
 
 desktopの403高さへのresize、合成composition、実keyboardの開閉は別の検証。
-前の`0.3.0-auth`の実推論／CodingTools成功とも区別する。CDP attach時のstream停滞は
-未解決で、今回修正したとは扱わない。
+前の`0.3.0-auth`の実推論／CodingTools成功とも区別する。checkpoint4当時はCDP attach時の
+stream停滞を未解決として記録した。0.7.5-syncは復旧処理を追加したが、停止原因の解明や
+あらゆる長時間background動作の保証とは扱わない。

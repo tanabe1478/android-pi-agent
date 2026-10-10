@@ -49,7 +49,8 @@ function status() {
   $('status').textContent =
     errorMessage ||
     (!connected ? '再接続しています…' : view ? activityOf(view) : '接続しています…');
-  $('message').disabled = !view || !connected;
+  // Reconnecting must not blur a draft or interrupt native IME preedit.
+  $('message').disabled = !view;
   $('send').disabled = !view || !connected || sending;
   $('models').disabled = !view || !connected;
   $('thinking').disabled = !view || !connected;
@@ -139,6 +140,13 @@ async function dispatch(action) {
         });
     } else if (result.kind === 'dialog') showDialog(result.dialog, action.conversationId);
 
+    // A successful POST is final. Refresh presentation without repeating the action,
+    // even if the existing event stream stopped while the app was in the background.
+    if (result.kind !== 'dialog')
+      void client
+        .view()
+        .then(render)
+        .catch(() => {});
     status();
     return true;
   } catch (error) {
@@ -457,6 +465,7 @@ void client.watch(render, connection => {
 // Returning from the OAuth browser refreshes state without reloading the composer or replaying input.
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible' || client.abort.signal.aborted) return;
+  client.reconnect();
   void client
     .view()
     .then(render)

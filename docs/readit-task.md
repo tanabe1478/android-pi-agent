@@ -43,7 +43,8 @@ commit／push／PRはまだ行わない。Android Piの会話は既存の単一d
 - Host：Moon28 tests、JS配線7 tests、Chromium／WebKit mobile E2E20 tests。
   229削除、選択削除、keyboard-heightのmenu／touch target／scroll、保存前のdisk保持と
   保存後bytes／dirty=falseを含む。新しいmenu回帰は旧CSSで両browserとも失敗した。
-- Android Pi本体：79 Node／browser／bundle＋6 Python＝85 tests。これにはnative sourceの
+- Android Pi本体：0.7.4で79 Node／browser／bundle＋6 Python＝85 tests、
+  0.7.5-syncで85＋6＝91 tests。これにはnative sourceの
   view-only境界guardを含むが、Java文字列検査をAndroid実行testとは扱わない。
 - Host支援の実機確認：ADB touch injectionによる実soft keyboardのフリック、IME候補
   選択・変換・確定、確定後の削除／改行、menu Saveを確認。直接の日本語insertや
@@ -80,6 +81,9 @@ commit／push／PRはまだ行わない。Android Piの会話は既存の単一d
   確認する。file選択後は対象tabとidleを待ち、直後の旧tabを結果と取り違えない。
 - 検証途中のbackground化とtemporary wake leaseの終了は別に記録する。既存taskへ復帰し、
   入力結果を読んでから続行した。原因を自動lockと断定せず、security設定を変更しない。
+- 続く通常送信ではモデルが応答してもPi画面が古いsnapshotのまま残った。送信を繰り返さず
+  接続だけを復旧し、SSE監視とforeground refreshを0.7.5-syncへ追加した。Readitの保存済み
+  public bytesも保持し、更新で終了した所有serverは一度だけ同じURLで起動し直した。
 
 Readitのスマホ対応そのものは完了宣言していない。この実作業を回帰taskとして使い、
 実機coding／browser／編集・保存・復帰の不足を確認しながらAndroid Piを改善する。

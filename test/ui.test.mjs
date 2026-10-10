@@ -4,7 +4,84 @@ import assert from 'node:assert/strict';
 import { fauxAssistantMessage, fauxText } from '@earendil-works/pi-ai';
 
 import { createBridge } from '../runtime/bridge.ts';
-import { fixture } from './helpers.mjs';
+import { fixture, eventually, busy } from './helpers.mjs';
+
+test(
+  'foreground return replaces a held stream, preserves a draft and never resubmits input',
+  { skip: !process.env.PI_TEST_CHROME },
+  async t => {
+    const f = await fixture(t, { tokensPerSecond: 60 });
+    f.faux.setResponses([
+      fauxAssistantMessage([fauxText('reconnected fixture response '.repeat(4))]),
+    ]);
+    const bridge = await createBridge(f.kernel, 'foreground-fixture-token');
+    const { chromium } = await import('playwright-core');
+    const browser = await chromium.launch({
+      executablePath: process.env.PI_TEST_CHROME,
+      headless: true,
+    });
+    try {
+      const page = await browser.newPage({ viewport: { width: 360, height: 780 } });
+      await page.addInitScript(() => {
+        const original = window.fetch.bind(window);
+        window.__fixtureStreams = 0;
+        window.__fixturePosts = 0;
+        window.fetch = async (url, options) => {
+          if (url === '/api/action') window.__fixturePosts++;
+          if (url === '/api/events' && ++window.__fixtureStreams === 1) {
+            const response = await original('/api/view', { headers: options.headers });
+            const view = await response.json();
+            return new Response(
+              new ReadableStream({
+                start(controller) {
+                  controller.enqueue(
+                    new TextEncoder().encode(`event: snapshot\ndata: ${JSON.stringify(view)}\n\n`),
+                  );
+                },
+                cancel() {
+                  window.__fixtureStreamCancelled = true;
+                },
+              }),
+              { headers: { 'content-type': 'text/event-stream' } },
+            );
+          }
+          return original(url, options);
+        };
+      });
+      await page.goto(bridge.url + '/#token=foreground-fixture-token');
+      await page.waitForFunction(() => !document.getElementById('message').disabled);
+      const editor = page.getByRole('textbox', { name: 'メッセージ' });
+      await editor.fill('one fixture submission');
+      await page.getByRole('button', { name: '送信', exact: true }).click();
+      await eventually(
+        () => f.kernel.snapshot(),
+        view => !busy(view) && f.faux.state.callCount === 1,
+      );
+      await editor.fill('保持する日本語draft 👩‍💻');
+      await editor.focus();
+      await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+      await page.waitForFunction(
+        () => window.__fixtureStreams >= 2 && !document.getElementById('send').disabled,
+      );
+      await page.waitForFunction(() =>
+        document.getElementById('transcript').textContent.includes('reconnected fixture response'),
+      );
+      assert.equal(await editor.inputValue(), '保持する日本語draft 👩‍💻');
+      assert.equal(await editor.evaluate(node => document.activeElement === node), true);
+      assert.deepEqual(
+        await page.evaluate(() => ({
+          posts: window.__fixturePosts,
+          cancelled: window.__fixtureStreamCancelled,
+        })),
+        { posts: 1, cancelled: true },
+      );
+      assert.equal(f.faux.state.callCount, 1);
+    } finally {
+      await browser.close();
+      await bridge.close();
+    }
+  },
+);
 
 test(
   'mobile presentation completes commands, preserves the IME draft during streaming and confirms scoped clear',

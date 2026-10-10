@@ -2,7 +2,7 @@
 
 個人用のAndroidローカルPi環境。`pi-durable`を唯一のエージェントバックエンドにし、`pi-tui`の設計を参考に、タッチ・IME向けの操作画面を作ります。
 
-**Galaxyは`0.7.4-tools`へデータ保持で更新済み。小さいscrolling headerと最小composer、別settings、標準npm／npx、前面Preview WebViewだけのhardware画像化を実装しています。実機PiがReaditを編集・起動し、取得画像だけから未知Canvas文字を正しく読み取れました。**
+**Galaxyは`0.7.5-sync`へデータ保持で更新済み。送信済みでも画面更新が止まる症状への再接続・読取refreshを追加しました。小さいscrolling headerと最小composer、別settings、標準npm／npx、Preview WebViewだけのhardware画像化を維持しています。実機PiがReaditを編集・起動し、取得画像だけから未知Canvas文字を正しく読み取れました。**
 
 既存のChatGPT認証／実推論／write-read-bash、実GitHub認証／gh追加／private git HTTPSは維持しています。[Readitを使った改善と検証](docs/readit-task.md)では、phoneのcodingとhost build／E2E、画像readと実IME操作を区別します。期限切れcredentialの実refresh、WebGL／video、復旧保証、Pi全機能互換は未達です。
 
@@ -20,7 +20,7 @@ SQLite / 明示的な作業ディレクトリ
 
 ## この区切りでできること
 
-- Android foreground service、private assets展開、Node起動、認証付きWebView接続。別IDの`0.7.4-tools` APKをGalaxyへデータ保持で更新
+- Android foreground service、private assets展開、Node起動、認証付きWebView接続。別IDの`0.7.5-sync` APKをGalaxyへデータ保持で更新
 - 端末のCodingToolsによるwrite/read/bash、会話保存、service停止／再開、idle owner kill後の復元を確認（fauxのscripted fixture）
 - ChatGPT OAuthの開始・外部ブラウザ・取消・5分timeout・手動callback fallback。認証済みのログイン表示を隠し、操作メニューから再認証
 - 実機でChromeへの遷移とユーザーのChatGPTログイン、実モデルの短い応答、回答中の日本語＋emoji draft／focus保持を確認
@@ -122,4 +122,4 @@ Chrome指定時は360×780のデスクトップブラウザでもUIを検証し�
 
 新application IDは`io.github.tanabe1478.androidpi`、今回の表示名は`Android Pi`です。[Androidホスト・ビルド・保存領域・未検証範囲](docs/android.md)を参照してください。
 
-`0.7.4-tools`更新時は7会話・98確定エントリのdigest、選択／設定、ChatGPT／GitHub認証、追加gh／CLI registryとcore hashesを保持しました。その後のReadit taskは同じdurable会話へ新しい履歴を追加しています。旧`org.pimobile.app`は明示依頼でuser 0から削除しましたが、旧データ／認証の移行はせず、Macの参照リポジトリを保持しています。Readitではhost ADBによる実soft keyboardのIME変換・削除・改行・保存も確認しました。Pi composerのIME変換、実指操作、実ツール途中のkill、長時間backgroundなどは未検証です。
+`0.7.5-sync`更新時は7会話・227確定エントリのdigestを保持。`0.7.4-tools`更新時にも7会話・98確定エントリのdigest、選択／設定、ChatGPT／GitHub認証、追加gh／CLI registryとcore hashesを保持しました。その後のReadit taskは同じdurable会話へ新しい履歴を追加しています。旧`org.pimobile.app`は明示依頼でuser 0から削除しましたが、旧データ／認証の移行はせず、Macの参照リポジトリを保持しています。Readitではhost ADBによる実soft keyboardのIME変換・削除・改行・保存も確認しました。Pi composerのIME変換、実指操作、実ツール途中のkill、長時間backgroundなどは未検証です。
