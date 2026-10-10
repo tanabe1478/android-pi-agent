@@ -72,4 +72,6 @@ targetSdk 28の既存の実行方式を維持する。最新targetSdk／Play対�
 
 foreground serviceがassetsをprivate stagingへ展開し、flockを保持してNodeへexecする。Activityはprivate ready recordから接続し、UIとkernelのAPIは同じまま使う。`usr/`の初回baselineと更新できる`app/`を分け、home・workspace・SQLiteを保持する。
 
-APKをGalaxyへ別アプリとしてインストールし、WebViewの送信／draft保持、端末のNode/bashとCodingTools、flock、停止／再開を確認。soft keyboardの開閉とviewport縮小は確認したが、実IMEの日本語変換・実モデル認証／推論は未検証。新版は認証adapterと外部ブラウザ遷移を実装したが端末更新前。詳細は[Androidホストと検証範囲](android.md)。
+Galaxyへ`0.3.0-auth`をデータ保持で更新し、ChromeへのOAuth遷移・ユーザーのChatGPTログイン・実`openai/gpt-6.1-sol`の応答を確認。実モデルが既存CodingToolsをwrite/read/bashの順で選び、専用fixtureを操作した。service再開後も認証、会話、モデル／thinkingを保持する。
+
+WebViewの送信／draft保持、端末のNode/bash、flock、停止／再開、soft keyboardの開閉とviewport縮小も確認済み。実credentialの期限切れrefresh、実IME変換、実ツール途中のkillなどは未検証。CDP attach時のstream停滞は観測しており、原因は未特定。詳細は[Androidホストと検証範囲](android.md)。

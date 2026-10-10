@@ -1,13 +1,13 @@
 # 機能対応表（チェックポイント3）
 
-「実装済み」はホストで検証した範囲。Androidの動作や端末Piと完全に同じ意味を保証する表示ではない。
+検証環境を各行と[Androidの検証範囲](android.md)で区別する。「実装済み」は端末Piと完全に同じ意味を保証する表示ではない。
 
 | 機能 | 状態 | この区切りの範囲／残る作業 |
 | --- | --- | --- |
-| モデル呼び出し・coding tools | 既存実装を利用 | durableとCodingTools。fauxによる会話と一時workspaceのwrite/readを検証 |
+| モデル呼び出し・coding tools | 既存実装を利用・実機確認 | durableとCodingTools。Galaxyで実`openai/gpt-6.1-sol`の応答と、実モデルが選んだwrite/read/bashを専用fixtureで確認 |
 | ストリーミング表示 | 実装済み | committed viewを表示。ドラフトを維持 |
 | thinking・tool結果表示 | 最小実装 | 展開できる。装飾・専用renderer・usage表示は未整備 |
-| モデル・思考レベル | 実装済み | 登録モデルの変更・検索・対応レベル検証・再オープン復元。実アカウントでの利用可否は未検証 |
+| モデル・思考レベル | 実装済み | 登録モデルの変更・検索・対応レベル検証・再オープン復元。実機でgpt-6.1-sol／lowを確認。他モデルの利用可否は未検証 |
 | 会話作成・切替・命名 | 実装済み | 同じdurable SQLiteのcatalog。明示的な対象ID |
 | fork | durable向けに適応 | ユーザー入力地点から別会話を作成。CLIの同一ファイル内tree navigationとは異なる |
 | clear | 実装済み | 文脈リセット。確認・busy guard・履歴保持。旧履歴の閲覧UIは未実装 |
@@ -24,16 +24,16 @@
 | 添付・画像・ファイル補完 | 未対応 | picker、モデル能力確認、永続化、画像表示を接続 |
 | ! / !! | 明示的に未対応 | 私的シェル入力として扱うべきものをモデルへ誤送信しない |
 | tree / import / export / share | 未対応 | durableの履歴・分岐とCLI形式の違いを扱う |
-| ChatGPT認証 | 接続済み・host検証 | 既存pi-ai OAuth、private保存、refresh、取消・timeout、manual fallback、login非表示／menu再認証。実アカウント／Android browser遷移は未検証。logout・他provider／API keyは未対応 |
+| ChatGPT認証 | 接続済み・実機確認 | 既存pi-ai OAuth、private保存、refresh、取消・timeout、manual fallback。GalaxyのChromeで実ログインし、login非表示／menu再認証とservice再開後の認証利用を確認。期限切れ実refreshは未検証。logout・他provider／API keyは未対応 |
 | GitHub認証 | 未対応 | 参照の既存実装を共通側へ接続。旧PATを自動移行しない |
 | on-demand CLI / pi-browser | 未対応 | 参照のCLI-first実装を移植。承認境界とnative hostを先に整える |
-| Android APK・native host | Galaxyで最小動作確認 | 別ID・targetSdk 28。private展開、foreground service、Node／WebView、keyboard resize、durableのwrite/read/bashを確認。実IME変換・実認証は未検証 |
-| process death / recovery | 限定的に検証 | Android service停止／再開とidle owner kill後の会話復元、flockを確認。実ツール途中のkill・電源断・長時間background、デスクトップのprofile lockは未検証／未対応 |
+| Android APK・native host | Galaxyで最小動作確認 | 別ID・targetSdk 28。private展開、foreground service、Node／WebView、keyboard resize、実認証／推論／toolsを確認。実IME変換・長時間動作などは未検証 |
+| process death / recovery | 限定的に検証 | Android service停止／再開で実認証・会話・モデル／思考を復元。前のfauxではidle owner kill後の会話復元とflockも確認。実ツール途中のkill・電源断・長時間background、デスクトップのprofile lockは未検証／未対応 |
 
 ## 実装の順序
 
 1. この土台をコミットし、構造と未対応範囲を共有
-2. Androidホストのfaux実機確認とChatGPT adapterの接続は完了。端末を再接続し、新版の外部ブラウザ・実認証／推論を確認する。実IME／復旧の残りも続ける
+2. Androidホストのfaux確認、ChatGPT adapter、実認証／推論／toolsの実機確認は完了。GitHub・on-demand CLI・browserの移植と、実IME／復旧の残りを続ける
 3. Piのresource loader・拡張UI能力を再利用／適応し、端末Piとの機能差を埋める
 4. 添付、履歴／tree、直接シェル、MCPなどを対応表とテストで進める
 

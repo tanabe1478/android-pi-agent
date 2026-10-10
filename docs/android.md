@@ -1,6 +1,6 @@
 # Androidホスト（チェックポイント3）
 
-**前のfauxデモはGalaxy SM-S931Zで起動・WebView・Node/bash・durable tools・保存／再開を確認済み。今回はChatGPT認証と実モデル入口を接続しましたが、ADB未接続のため新版の端末更新・実ログイン／推論は未確認です。実IMEの手入力・変換まで完了したとも扱いません。**
+**Galaxy SM-S931Zへ`0.3.0-auth`をデータ保持で更新し、新アプリ専用ChatGPTログイン・`openai/gpt-6.1-sol`の実推論・実モデルによるCodingTools選択／実行を確認しました。service再起動後も認証・会話・モデル／思考を保持。実IMEの手入力・変換や実ツール途中のkillまで完了したとは扱いません。**
 
 ## アプリと保存領域
 
@@ -82,7 +82,7 @@ packagerは独自lockのproduction依存closureだけを選び、各versionを�
 
 ## 検証の区別
 
-今回のhost検証は**29 Node／browser／bundleテスト＋5 Pythonテスト＝34件、failure／skipなし**。typecheckとdebug APK `0.3.0-auth`のoffline buildが成功し、APKのapplication ID／minSdk 26／targetSdk 28を確認しました。端末へのインストール・実ログイン／実推論の成功は意味しません。
+今回のhost検証は**29 Node／browser／bundleテスト＋5 Pythonテスト＝34件、failure／skipなし**。typecheckとdebug APK `0.3.0-auth`のoffline buildが成功し、APKのapplication ID／minSdk 26／targetSdk 28を確認しました。以下のAndroid／実モデル確認は、それとは別に端末上で実施しています。
 
 ```sh
 npm run check
@@ -94,21 +94,33 @@ python3 -m unittest discover -s scripts -p 'test_*.py' -v
 - host：bridge公開／終了、親消失、同じdurable profileの再起動を検証
 - packaged host：production-only archiveを展開し、Nodeのfaux送信・保存・再起動とreal modeへの切替を検証。デモ会話とモデルを保持し、未認証で実モデルを呼ばない
 - auth host：private保存、stable ID、直列化refresh、取消・timeout・stale prompt、credential非公開を検証。既存ChatGPT callbackを実際にlistenし、token通信はmockしてstate拒否・code交換・refresh・cancel時closeを検証（portが使用中なら既存loginを守ってskip）
-- desktop auth UI：360×780で取消、masked callback、認証済みlogin非表示、menu再認証を検証。実ブラウザへのOpenAIログイン・Android Intent起動そのものは未確認
+- desktop auth UI：360×780で取消、masked callback、認証済みlogin非表示、menu再認証を検証。このテスト自体は実OpenAIログインやAndroid Intentの検証ではない
 - packaging：依存closure、version、hoisting、再現性、private/dev/hostファイル除外、traversal／symlink拒否を検証
 - Android：Galaxy SM-S931Z（Android 16/API 36、ARM64）へ別アプリとしてインストール。Node 26.4.0、bash、稼働中flockと停止後の解除を確認
 - tools：端末のfauxにtool callを登録し、実際のCodingToolsが`write → read → bash`を指定cwdで実行。実モデルが自律的に選択した検証ではない
 - WebView：360×730、DPR 3。日本語＋emoji送信、stream中のdraft／focus保持、補完、未知コマンド拒否、clear取消、保存を確認。JavaScript errorなし・水平overflowなし
 - keyboard：実際のAndroid tapでsoft keyboardを開閉。viewportは730→403へ縮み、送信操作はkeyboardより上。WebViewの合成イベント中Enterガードは確認したが、実IMEによる日本語の手入力・候補変換は未検証
 - lifecycle：ホーム画面から復帰してSSE更新を確認。service停止／再開、idle owner kill後の再起動でもfixture会話3 entriesと選択を維持
-- real provider：入口と認証adapterは接続済み。実アカウントの認証・実推論は未確認。fauxは事前登録した返答であり、端末内の小型LLMではない
+- real provider：今回の新アプリで実ChatGPTログインと`openai/gpt-6.1-sol`の実推論を確認。以下を参照。fauxは事前登録した返答であり、端末内の小型LLMではない
 
-旧アプリのデータ・認証・設定／権限は変更していません。ADB forwardsは検証後に削除し、private screenshots・SQLite・launcherをgitへ入れていません。
+### 今回のreal provider実機確認
+
+- 更新前に全durable task／queueがidleで、未送信draftが空であることを確認。serviceをgraceful stopし、`adb install -r`で更新。旧5会話・3エントリと選択を保持し、確定entryの比較も一致
+- AndroidからChromeへOAuth URLを渡し、ユーザーがブラウザでChatGPTログイン。callbackの成功表示だけでなく、新ランタイムの認証完了も確認。認証ファイル／installation metadataは0600。内容は取得・公開せず、旧アプリからの移行もしない
+- 別の「実モデル確認」会話（ID 37）を作成し、UIで`openai/gpt-6.1-sol`を選択。thinkingは検証用にlow。短いmarker要求を一度だけ送信し、実assistant応答をdurableへ確定。input 648／output 8 tokens、stopReasonはstop
+- 実回答中の日本語＋emoji draft／focusを保持。login非表示とmenu再認証、JavaScript errorなし・水平overflowなしを確認。composer入力は自動操作で、実IME変換の検証ではない
+- idle／空draftでserviceを停止・再開。認証metadata、会話entry、モデル／thinking、選択、login非表示を復元。同じAndroid owner内でNode childを再起動した確認であり、app全体のhard killや電源断ではない
+- その再起動後、実モデルにfixture directoryだけを操作するよう依頼。モデル自身が`write → read → bash`を選択し、3件とも成功。書いたmarkerのread結果、bashのmarkerと指定cwd、実assistantの完了応答を確認。fauxのscripted callではない
+- 作成したfixture fileと空directoryだけを片付け、会話の検証履歴は保持。旧アプリや既存workspace fileは変更しない
+- 実認証の期限切れrefreshは未検証。host mockでのrefresh成功と、新規／保存済み実credentialでの推論成功を混同しない
+
+旧アプリのデータ・認証・設定／権限は変更していません。ADB forwardsは検証後に削除し、private screenshots・SQLite・launcherをgitへ入れていません。今回のログイン中はブラウザのDOM／画面／callback URLを取得しませんでした。
 
 実機で分かった差分：
 
 - Android toyboxの`tar --restrict`は先頭entryを許可rootとする。runtime archiveの先頭へ明示的な`app/` directoryを追加して修正し、回帰テストと端末の小規模展開試験を追加
-- CDPを既存WebViewへattachした際に既存fetch streamが更新されない状態を観測。原因は未特定。検証ではattach後に、draftが空であることを確認して読み取り専用reloadを行った。その後の更新・通常のhome／復帰は通った
+- CDPを既存WebViewへattachした際に既存fetch streamが更新されない状態を観測。real確認でも会話作成はAPIへ確定したが画面が更新されないことがあった。原因は未特定。draftが空であることを確認して読み取り専用reloadし、既存の検証会話から再開した。会話作成や送信を再実行したのではない。その後の実回答・tools表示や通常のhome／復帰は通った
+- OAuthリンクのCDP clickは外部Activityへの遷移後にnavigation待ちがtimeoutしたが、実際にはChromeへ遷移済みだった。画面遷移の失敗と決めつけず、foreground componentと認証状態を独立に確認した
 - keyboard表示中のCDP screenshotには重複描画が出たため、それだけで実表示を判定しない。実際のADB screenshotをkeyboard候補／clipboardが出ない状態でapp領域だけcropして確認。実keyboardのlayoutは別途数値検証
 
-まだ未確認：新版APKの端末起動、Android外部ブラウザ遷移、実アカウントauth／real inference、実IME変換、実ツール途中のhard kill・電源断、長時間background、デスクトップの複数process排他、クリーンなnpm依存取得。
+まだ未確認：実credentialの期限切れrefresh、実モデルcompaction、実IME変換、実ツール途中のhard kill・電源断、長時間background、デスクトップの複数process排他、クリーンなnpm依存取得。browser／GitHub／resource loaderなどの広い機能対応は別の作業。

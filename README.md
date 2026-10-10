@@ -2,9 +2,9 @@
 
 個人用のAndroidローカルPi環境。`pi-durable`を唯一のエージェントバックエンドにし、`pi-tui`の設計を参考に、タッチ・IME向けの操作画面を作ります。
 
-**チェックポイント3：新アプリ専用のChatGPT認証・自動更新・実モデル入口を接続。ホストのmocked OAuth／ブラウザ検証まで完了し、実機ログイン・実推論は未確認です。**
+**チェックポイント3：Galaxyで新アプリ専用ChatGPTログイン、`openai/gpt-6.1-sol`の実推論、実モデルが選択したwrite/read/bashを確認。service再起動後も認証・会話・モデル／思考を保持しています。**
 
-前のデモAPKはGalaxyで起動・WebView・ツール・保存／再開を確認済みです。今回の実モデル版とは検証範囲を分けます。
+ホストの34テスト、前のfauxデモ、今回の実モデル確認は検証範囲を分けます。期限切れcredentialの実refreshやPiの全機能互換を確認した、という意味ではありません。
 
 ```text
 Android向けUI（ブラウザとGalaxy WebViewで最小操作を検証）
@@ -20,9 +20,11 @@ SQLite / 明示的な作業ディレクトリ
 
 ## この区切りでできること
 
-- Android foreground service、private assets展開、Node起動、認証付きWebView接続。別IDのデモAPKをGalaxyで確認
+- Android foreground service、private assets展開、Node起動、認証付きWebView接続。別IDの`0.3.0-auth` APKをGalaxyへデータ保持で更新
 - 端末のCodingToolsによるwrite/read/bash、会話保存、service停止／再開、idle owner kill後の復元を確認（fauxのscripted fixture）
 - ChatGPT OAuthの開始・外部ブラウザ・取消・5分timeout・手動callback fallback。認証済みのログイン表示を隠し、操作メニューから再認証
+- 実機でChromeへの遷移とユーザーのChatGPTログイン、実モデルの短い応答、回答中の日本語＋emoji draft／focus保持を確認
+- 実モデルが既存CodingToolsを`write → read → bash`の順に選択し、専用fixture directoryで成功。service再起動後の認証利用も確認
 - 新profile専用の0600認証ファイル、stable installation ID、pi-aiによる直列化したtoken refresh。旧アプリ／ホストPiの認証やambient API keyは使わない
 - fauxモデルによるローカルデモ（`--demo`。実認証ファイルや外部モデルAPIを使わない）
 - ストリーミング状態・思考・ツール結果の表示、生成中の入力保持
@@ -95,4 +97,4 @@ Chrome指定時は360×780のデスクトップブラウザでもUIを検証し�
 
 新application IDは`io.github.tanabe1478.androidpi`、今回の表示名は`Android Pi`です。[Androidホスト・ビルド・保存領域・未検証範囲](docs/android.md)を参照してください。
 
-前のデモAPKは端末へインストール済みです。今回の実モデル版はADB未接続のためまだ更新していません。旧アプリ・会話・認証は移行／変更していません。実ログイン／推論、実IMEの日本語変換や実ツール途中のkillは未検証です。
+実モデル版`0.3.0-auth`は端末へ更新済みです。更新前の5会話・確定済み3エントリを保持し、別の「実モデル確認」会話で検証しました。旧アプリ・会話・認証は移行／変更していません。実IMEの日本語変換、実ツール途中のkill、長時間backgroundなどは未検証です。
