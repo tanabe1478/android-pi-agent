@@ -1,8 +1,8 @@
 # Androidホスト（チェックポイント4）
 
-`0.4.0-ui`をGalaxyへデータ保持で更新。新UIは[Piを基本にしたAndroid表示](ui.md)を参照してください。認証・選択・6会話・16エントリの保持と確定entry比較の一致を確認しました。消灯・ロック中でWebViewの新UI操作／keyboardの最終確認は保留です。
+`0.4.0-ui`をGalaxyへデータ保持で更新。新UIは[Piを基本にしたAndroid表示](ui.md)を参照してください。認証・選択・6会話・16エントリの保持と確定entry比較の一致を確認しました。新UIの基本操作、3つのtool call/resultの表示と展開、footer selectors、実keyboard表示中のlayoutも確認しました。viewportは360×730→360×403で、送信control／footerはkeyboardに隠れず、履歴領域は209pxを確保。JavaScript error・水平overflowなし。
 
-今回のhost検証は36 Node／browser／bundle＋5 Python＝41件、failure／skipなし。APKのoffline buildとID／SDK確認も成功しています。以下の実認証／実推論記録は前の`0.3.0-auth`での確認です。
+今回のhost検証は36 Node／browser／bundle＋5 Python＝41件、failure／skipなし。APKのoffline buildとID／SDK確認も成功しています。新UI確認ではモデルへ新しい入力は送らず、会話・選択・設定・usageを保持しています。実IMEの手入力・変換は未検証。自動消灯には検証中だけWeb Screen Wake Lockを使い、終了時に解除しました。Android設定の変更や常時点灯機能の追加はありません。以下の実認証／実推論記録は前の`0.3.0-auth`での確認です。
 
 **Galaxy SM-S931Zへ`0.3.0-auth`をデータ保持で更新し、新アプリ専用ChatGPTログイン・`openai/gpt-6.1-sol`の実推論・実モデルによるCodingTools選択／実行を確認しました。service再起動後も認証・会話・モデル／思考を保持。実IMEの手入力・変換や実ツール途中のkillまで完了したとは扱いません。**
 

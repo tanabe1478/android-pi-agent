@@ -70,7 +70,28 @@ lexer tokensからallowlistのDOMを組み立てる。`innerHTML`、raw HTML実�
 Galaxyへ`adb install -r`で更新し、認証・選択と6会話・16エントリを保持した。
 更新前後の確定entry比較も一致した。
 
-更新後の端末は消灯・ロック中のため、**新UIのWebView操作・実keyboard layoutの
-最終確認は保留**。desktopの403高さへのresizeは実Android IME検証ではない。
-前の`0.3.0-auth`で成功した実認証／推論／CodingTools確認も、今回のUI確認とは
-区別する。CDP attach時のstream停滞は未解決で、今回修正したとは扱わない。
+### 新UIのGalaxy確認
+
+- 認証保持／login非表示、上部固定barなし、下部editor／footerを確認。
+  footerのmodel／thinking／累積usageがdurable viewと一致
+- 既存の実モデル履歴にある3つのtool call/resultをまとめて表示し、個別の展開／
+  折りたたみを確認。今回の履歴にはthinking blockがなかったため、思考表示の
+  切替はdesktop browser検証の範囲
+- model検索、thinking、会話、usage、workspaceのdialogとmenu再認証を開閉。
+  設定の選択／保存や再ログインは行わない
+- 実際のAndroid tapでkeyboardを表示し、viewportは360×730から360×403へ縮小。
+  送信controlとfooterはkeyboardより上に収まり、履歴領域も515→209pxを確保。
+  keyboardを閉じると730高さへ復帰。pageの水平overflowとJavaScript errorはなし
+- 自動操作で日本語＋emoji draftを入力し、`/` shortcutが既存draftを上書きしないこと、
+  `/mo`候補のtap選択、合成composition中Enter guardを確認。
+  **実IMEでの手入力・候補変換は未検証**
+- 検証前後のconversation entries、session選択、model／thinking、usageに差分なし。
+  検証用draftだけを片付け、scroll／focusを復元。モデルへ新しい入力は送信しない
+- 自動消灯で操作を進められない状態を観測した。端末の設定は変更せず、ユーザーの
+  ロック解除後に検証用のWeb Screen Wake Lockを一時取得し、確認終了時に解除した。
+  アプリに常時画面点灯する機能を追加したのではない
+- ブラウザ／keyboardの画像、clipboardや候補内容は取得しない。ADB forwardsも解除
+
+desktopの403高さへのresize、合成composition、実keyboardの開閉は別の検証。
+前の`0.3.0-auth`の実推論／CodingTools成功とも区別する。CDP attach時のstream停滞は
+未解決で、今回修正したとは扱わない。

@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | モデル呼び出し・coding tools | 既存実装を利用・実機確認 | durableとCodingTools。Galaxyで実`openai/gpt-6.1-sol`の応答と、実モデルが選んだwrite/read/bashを専用fixtureで確認 |
 | ストリーミング表示 | 実装済み | committed viewを表示。ドラフトを維持 |
-| Pi型UI・thinking・tool結果表示 | DOMへ適応 | フラットなMarkdown本文、思考折りたたみ、tool call/result pairingとpreview、下部editor／footer。専用extension rendererは未対応。新UI実機操作はロック解除待ち |
+| Pi型UI・thinking・tool結果表示 | DOMへ適応 | フラットなMarkdown本文、思考折りたたみ、tool call/result pairingとpreview、下部editor／footer。Galaxyでtool展開、footer selectors、実keyboard layoutを確認。思考切替はdesktop確認。専用extension rendererは未対応 |
 | usage表示 | 累計のみ実装 | durableのpi.usageを表示。reasoningはoutputの内数。context占有率は未取得、参考costは実請求とは扱わない |
 | モデル・思考レベル | 実装済み | 登録モデルの変更・検索・対応レベル検証・再オープン復元。実機でgpt-6.1-sol／lowを確認。他モデルの利用可否は未検証 |
 | 会話作成・切替・命名 | 実装済み | 同じdurable SQLiteのcatalog。明示的な対象ID |
