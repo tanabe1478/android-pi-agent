@@ -396,7 +396,7 @@ test(
       await input.fill(TOKEN);
       await page.getByRole('button', { name: '閉じる', exact: true }).click();
       await editor.fill('保持するdraft 👩‍💻');
-      await page.locator('#menu').click();
+      await page.locator('#settings-open').click();
       await page.getByRole('button', { name: 'GitHub認証を設定', exact: true }).click();
       assert.equal(await input.inputValue(), '');
       await input.fill(TOKEN);

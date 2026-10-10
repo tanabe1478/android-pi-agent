@@ -50,7 +50,7 @@ test(
       );
       assert.equal(await editor.inputValue(), '日本語の入力中 👩‍💻');
       assert.equal(await editor.evaluate(node => document.activeElement === node), true);
-      await page.waitForFunction(() => document.getElementById('abort').disabled);
+      await page.waitForFunction(() => !document.getElementById('app').classList.contains('busy'));
 
       const beforeCalls = f.faux.state.callCount;
       await editor.fill('/not-supported');
@@ -71,12 +71,14 @@ test(
         () => !document.getElementById('transcript').textContent.includes('fixture prompt'),
       );
 
-      await page.locator('#sessions').click();
+      await page.locator('#settings-open').click();
+      await page.getByRole('button', { name: '/resume 会話', exact: true }).click();
       await page.getByRole('button', { name: '新しい会話', exact: true }).click();
       await page.waitForFunction(
         () => document.getElementById('sessions').textContent === 'New session',
       );
 
+      await page.locator('#settings-back').click();
       const layout = await page.evaluate(() => ({
         width: innerWidth,
         scroll: document.documentElement.scrollWidth,

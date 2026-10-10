@@ -28,6 +28,7 @@ public final class PreviewActivity extends Activity {
   private static boolean directoryConfigured;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private WebView webView;
+  private PreviewCapture capture;
   private int ownerPid;
   private int runtimePid;
   private boolean resumed;
@@ -42,6 +43,7 @@ public final class PreviewActivity extends Activity {
         finish();
         return;
       }
+      capture.poll();
       PreviewRequests.poll(PreviewActivity.this, webView, ownerPid);
       handler.postDelayed(this, 500);
     }
@@ -112,6 +114,8 @@ public final class PreviewActivity extends Activity {
     });
     layout.addView(webView, new LinearLayout.LayoutParams(-1, 0, 1));
     setContentView(layout);
+    capture = new PreviewCapture(this, webView, ownerPid, runtimePid,
+        () -> resumed && !isFinishing());
     webView.loadUrl(url);
   }
 
@@ -158,6 +162,7 @@ public final class PreviewActivity extends Activity {
   protected void onPause() {
     resumed = false;
     handler.removeCallbacks(poll);
+    if (capture != null) capture.cancel();
     writeState(false);
     super.onPause();
   }
@@ -166,6 +171,7 @@ public final class PreviewActivity extends Activity {
   protected void onDestroy() {
     resumed = false;
     handler.removeCallbacks(poll);
+    if (capture != null) capture.cancel();
     writeState(false);
     if (webView != null) webView.destroy();
     super.onDestroy();

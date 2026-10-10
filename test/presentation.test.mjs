@@ -261,16 +261,19 @@ test(
     page.on('pageerror', error => errors.push(error.message));
     const editor = page.locator('#message');
     await editor.fill('保持するdraft 👩‍💻');
-    await page.locator('#command').click();
+    await page.locator('#settings-open').click();
+    await page.getByRole('heading', { name: '設定', exact: true }).waitFor();
+    await page.getByRole('button', { name: 'ヘルプ', exact: true }).click();
     await page.getByRole('heading', { name: '操作一覧' }).waitFor();
     await page.locator('#dialog-close').click();
+    await page.locator('#settings-back').click();
     assert.equal(await editor.inputValue(), '保持するdraft 👩‍💻');
     await editor.focus();
     await page.keyboard.press('Control+l');
     await page.getByRole('heading', { name: 'モデルを選択' }).waitFor();
     await page.locator('#dialog-close').click();
     assert.equal(await editor.inputValue(), '保持するdraft 👩‍💻');
-    await editor.fill('/');
+    await editor.fill('/mo');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Tab');
     assert.equal(await editor.inputValue(), '/model ');
@@ -298,14 +301,16 @@ test(
     await editor.fill('fixture prompt');
     await page.keyboard.press('Control+Enter');
     await page.locator('.assistant strong').filter({ hasText: 'Pi-style' }).waitFor();
-    await page.waitForFunction(() => document.getElementById('abort').disabled);
+    await page.waitForFunction(() => !document.getElementById('app').classList.contains('busy'));
     await page.keyboard.press('Control+t');
     assert.equal(await page.locator('.thinking-block').evaluate(node => node.open), false);
-    await page.locator('#usage').click();
+    await page.locator('#settings-open').click();
+    await page.getByRole('button', { name: '累積使用量', exact: true }).click();
     await page
       .getByText('pi.usageの確定累計です。context占有率はまだ取得していません。', { exact: true })
       .waitFor();
     await page.locator('#dialog-close').click();
+    await page.locator('#settings-back').click();
     for (const viewport of [
       { width: 320, height: 403 },
       { width: 360, height: 403 },

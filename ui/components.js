@@ -137,6 +137,7 @@ function renderTool(item, expanded) {
 export class Transcript {
   constructor(node, onFork) {
     this.node = node;
+    this.header = node.querySelector('#app-header');
     this.onFork = onFork;
     this.cards = new Map();
     this.activeId = null;
@@ -162,10 +163,7 @@ export class Transcript {
     const follow = this.node.scrollHeight - this.node.scrollTop - this.node.clientHeight < 80;
     if (this.activeId !== view.activeId) {
       this.cards.clear();
-      const intro = element('aside', undefined, 'startup');
-      intro.append(element('strong', 'pi'), element('span', ' · Android / durable'));
-      intro.append(element('p', '/ commands · Ctrl+Enter 送信 · Enter 改行'));
-      this.node.replaceChildren(intro);
+      this.node.replaceChildren(...(this.header ? [this.header] : []));
       this.activeId = view.activeId;
     }
 

@@ -1,6 +1,7 @@
 // One command catalogue for backend dispatch, help and UI completion.
 export const COMMANDS = Object.freeze([
   { name: 'help', description: '使える操作を表示' },
+  { name: 'settings', description: '設定画面を開く' },
   { name: 'model', description: 'モデルを選択' },
   { name: 'thinking', description: '思考レベルを選択' },
   { name: 'login', description: 'ChatGPT認証を開く（実モード）' },

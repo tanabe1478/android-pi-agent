@@ -1,6 +1,8 @@
 # 分離プレビューと画像read（チェックポイント6）
 
-`0.6.0-preview`をGalaxyへデータ保持で更新済み。66 Node／browser／bundle＋6 Python＝72 testsとoffline APK buildが成功しました。**端末のプレビュー操作・画像readは画面ロック中のため未検証**です。デスクトップChromeでの成功と区別します。
+現在のGalaxyは`0.7.4-tools`。実モデルがphone branchのReaditを分離Previewで起動し、公開fixtureの表示、drawer操作、PNG撮影と標準readによる画像入力まで実行しました。
+
+旧software bitmap描画ではCanvasが空白になり、同じ文字のPNGコピーは写る形で欠落を再現しました。現在はWebViewだけを専用offscreen hardware Surfaceへ描画します。実機のCanvas／PNGの両方と背景pixelの一致を確認し、実モデルもprompt／DOM text／sourceにないCanvas上の5文字を標準readの画像だけから正しく回答しました。これは2D Canvasの実機検証であり、WebGL／video／任意GPU layerや長時間の安定性を保証しません。
 
 ## 標準CLIから使う
 
@@ -44,6 +46,21 @@ openは一度だけrequestを発行します。PiまたはPreviewを前面にし
 
 これは別UID／trusted toolsからの安全な隔離ではありません。CDP scriptや同じUIDのコードは信頼対象です。分離はPi／認証のtargets・WebView storageへ誤接続しないための境界です。
 
+## Androidのnative画像化
+
+AndroidのscreenshotはCDP接続の前に、認証付きPOST `/api/browser/screenshot`へ空のJSON objectを送ります。Native側はpostVisualStateCallback後に、前面Preview WebViewだけを専用ImageReader Surfaceのhardware Canvasへ描画します。RGBAのrow strideを確認し、paddingを除いてbitmap／boundedなPNGへ変換します。Pi／toolbar／keyboard／Window／他アプリは撮影しません。
+
+- requestはowner PID／runtime PID／preview PID／URL／nonceへ結び、10秒の期限を持つ
+- nonceごとのprivate publication leaseとPNG／resultを使う。pendingや別requestを上書きしない
+- bitmapは4,000,000 pixelsまで、PNGは8 MiBまで。出力は0600、no-follow／size／signature検査
+- 正常な終了／失敗では自分のnonce出力だけを片付ける。timeout時に撮影を再送しない
+- pause／destroyでpending captureを取消。callbackの前後でforeground／URL／lease／期限を再確認
+- native resultのrenderer識別も検証し、旧software画像をhardware画像として受け入れない
+- Android native dimensionsはphysical pixels。整数CSS viewportとの丸め差があり得る
+- desktopは引き続きPlaywrightのviewport PNG。Androidと別の検証として扱う
+
+WindowのPixelCopy／screen captureをfallbackに使いません。描画失敗はerrorにし、空画像や旧software画像で成功を代替しません。すべてのGPU layerの網羅は未確認です。
+
 ## 画像read
 
 既存CodingToolsのreadをdurable wrapToolでdecorateします。別tool／Harness／model loopは追加しません。
@@ -61,6 +78,6 @@ Host：URL／request検証、single publication、0600、pending／symlink保護
 
 Desktop Chrome：privateなfixture profileだけで、CLIのsnapshot／run／screenshot、button click、viewport保持、input value／hidden DOM非取得を確認。throwしたscript／CDPのraw errorはCLIが表示しない。画像readは実ExecutionEnv、oversize／symlink／directory／cancellationとfaux HarnessのSQLite保持、UIのunsafe image拒否／幅も確認。
 
-Galaxy：idle／空draft／package lockなしを確認後、graceful stopとadb install -rで更新。6会話・19エントリ、確定entry digest、選択・model／thinking、ChatGPT／GitHub接続を保持。Node／bash／git／xz／gh digestとCLI registryも一致、private file modesは維持。更新後のUI CDP attachmentは画面ロック中にtimeoutしたため、再更新や入力再送をせずAPI／read-only SQLiteで保持を確認しました。
+Galaxy：0.7.4-toolsへの更新時にidle／空draft／dialog・settingsなし／package lockなしを確認し、graceful stopとadb install -rを実施。7会話・98エントリ、確定entry digest、選択・model／thinking、ChatGPT／GitHub接続、Node／bash／git／xz／gh digest、CLI registryを保持しました。これは更新直前のbaselineであり、その後のtask入力・画像結果は意図的な新規履歴です。
 
-残る実機確認：前面の公開fixtureだけでNative request消費、target／cookie store分離、draft保持、CLI click／snapshot／screenshot、readの画像結果と戻る操作を確認する。実モデルによる自律browser選択・vision推論、release、長時間background／途中killは別の検証です。
+実モデルが標準CLIでReaditを起動・操作し、hardware PNGをreadへ渡して未知Canvas文字を照合できました。実finger gesture、cookie store分離の完全probe、draft保持を含む総合preview probe、release、WebGL／video、長時間background／途中killは別途検証します。[Readit taskでの区別](readit-task.md)。

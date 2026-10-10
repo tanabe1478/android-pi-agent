@@ -398,13 +398,14 @@ test(
       await page.waitForFunction(() => document.getElementById('auth-bar').hidden);
       assert.equal(await page.locator('#auth-bar').isVisible(), false);
       await page.getByRole('button', { name: '閉じる', exact: true }).click();
-      await page.locator('#menu').click();
+      await page.locator('#settings-open').click();
       await page.getByRole('button', { name: 'ChatGPTを再認証', exact: true }).click();
       await page.getByRole('heading', { name: 'ChatGPT認証' }).waitFor();
       const dialogText = await page.locator('#dialog-body').textContent();
       assert.ok(!dialogText.includes('test-only-access'));
       assert.ok(!JSON.stringify(await kernel.snapshot()).includes('test-only-callback'));
       await page.getByRole('button', { name: '閉じる', exact: true }).click();
+      await page.locator('#settings-back').click();
       const editor = page.getByRole('textbox', { name: 'メッセージ' });
       await editor.fill('復帰後も保持するdraft');
       const [read] = await Promise.all([

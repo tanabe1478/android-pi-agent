@@ -22,20 +22,21 @@
 | 拡張のselect/confirm等 | 未対応 | Android UI capabilityを供給。現在のDialogはアプリ内部用 |
 | TUI custom components | 未対応 | 互換方式を決める。DOMへ自動変換できるとは扱わない |
 | MCP / codemode | 未対応 | 接続・tools exposure・更新／reloadの整合性を検証 |
-| 添付・画像・ファイル補完 | 画像readのみ接続 | 既存readのPNG／JPEG／WebP（8 MiB）、faux SQLite保持、safe image tool表示をhost確認。picker／送信添付／補完・実vision推論・実機操作は未対応／未検証 |
+| 添付・画像・ファイル補完 | 画像read・実機確認 | 既存readのPNG／JPEG／WebP（8 MiB）、faux SQLite保持、safe image表示。実機Piが画像だけの未知Canvas文字を照合。picker／送信添付／補完・巨大履歴pagingは未対応 |
 | ! / !! | 明示的に未対応 | 私的シェル入力として扱うべきものをモデルへ誤送信しない |
 | tree / import / export / share | 未対応 | durableの履歴・分岐とCLI形式の違いを扱う |
 | ChatGPT認証 | 接続済み・実機確認 | 既存pi-ai OAuth、private保存、refresh、取消・timeout、manual fallback。GalaxyのChromeで実ログインし、login非表示／menu再認証とservice再開後の認証利用を確認。期限切れ実refreshは未検証。logout・他provider／API keyは未対応 |
 | GitHub認証 | 実装済み・Galaxy確認 | 新profile専用PAT、専用UI／API、git HTTPS askpass、ghの限定ラッパー。指定1Password itemから明示的に新profileへ設定し、20 repos（4 private）の一覧とprivate git HTTPSを確認。旧PATは移行しない。実失効／解除は未検証 |
+| npm／npx | managed・Galaxy確認 | baseline Node entryを起動して固定shebangに対応。実機Piで既存11.20.0を利用。usr／npm packageを上書きせず、third-party scriptの全互換は保証しない |
 | on-demand CLI | 追加専用・Galaxy確認 | pi-pkg list／plan／install --yesでgh 2.102.0を追加。baseline照合・SHA256・既存files保護、APK再更新後の保持を確認。他package、maintainer scripts／APT署名検証／crash自動修復は未対応／未検証 |
-| pi-browser | 実装済み・host確認 | foreground-onlyの別process／WebView storage、owner-bound request、authenticated CDP、open／status／snapshot／screenshot／run。desktop Chrome確認、Galaxyへ更新済み。画面ロック中のため実機操作は未検証。release／自律model選択も未検証 |
+| pi-browser | 実装済み・Galaxy確認 | 別process／storage、owner-bound foreground request、authenticated CDP。実機Piが公開Readitを操作し、view-only hardware PNG／画像readを確認。2D Canvas欠落を修正。release／WebGL／video／長時間安定性は未検証 |
 | Android APK・native host | Galaxyで最小動作確認 | 別ID・targetSdk 28。private展開、foreground service、Node／WebView、keyboard resize、実認証／推論／toolsを確認。実IME変換・長時間動作などは未検証 |
 | process death / recovery | 限定的に検証 | Android service停止／再開で実認証・会話・モデル／思考を復元。前のfauxではidle owner kill後の会話復元とflockも確認。実ツール途中のkill・電源断・長時間background、デスクトップのprofile lockは未検証／未対応 |
 
 ## 実装の順序
 
 1. この土台をコミットし、構造と未対応範囲を共有
-2. Androidホストのfaux確認、ChatGPT adapter、実認証／推論／tools、Pi型UIの基本実機確認は完了。GitHub・on-demand CLIもデータ保持更新、実認証・read-only通信・gh追加を確認済み。browser／画像readを実装してデータ保持更新済み。実機preview・実IME／復旧を続ける
+2. Androidホストのfaux確認、ChatGPT adapter、実認証／推論／tools、Pi型UIの基本実機確認は完了。GitHub・on-demand CLIもデータ保持更新、実認証・read-only通信・gh追加を確認済み。browser／画像readの実機利用と画像だけのCanvas文字照合を確認。Readit taskで編集・保存を検証し、実IME／復旧とresource対応を続ける
 3. Piのresource loader・拡張UI能力を再利用／適応し、端末Piとの機能差を埋める
 4. 添付、履歴／tree、直接シェル、MCPなどを対応表とテストで進める
 

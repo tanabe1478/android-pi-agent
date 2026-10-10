@@ -35,6 +35,8 @@ SOURCE_FILES = (
     "runtime/browser-preview.ts",
     "runtime/browser-cdp.ts",
     "runtime/browser-cli.ts",
+    "runtime/browser-image.ts",
+    "runtime/browser-capture.ts",
     "runtime/image-read.ts",
     "runtime/host-channel.ts",
     "runtime/credentials.ts",

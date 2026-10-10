@@ -1,6 +1,6 @@
 # Androidホスト（チェックポイント6）
 
-`0.6.0-preview`（versionCode 6）のoffline APK build、66 Node／browser／bundle＋6 Python＝72 testsが成功し、Galaxyへ更新済み。idle／空draft／package lockなしを確認してgraceful stop／adb install -rを実施。6会話・19エントリ、確定entry digest、選択・model／thinking、ChatGPT／GitHub認証、追加gh／CLI registryとcore digestsを保持しました。**端末は画面ロック中で、更新後UI／previewの操作は未検証**。UI CDP timeoutで再更新・入力再送をせず、API／read-only SQLiteの保持を確認しています。[分離preview／画像read](browser.md)を参照。
+`0.7.4-tools`（versionCode 13）をGalaxyへデータ保持で更新済み。更新直前にidle／空draft／dialog・settingsなし／package lockなしを確認してgraceful stop／adb install -rを実施し、7会話・98エントリのdigest、選択／設定、ChatGPT／GitHub認証、追加gh／CLI registryとcore digestsを保持しました。実機Piで標準npm／npx、公開Readitの起動・Preview、hardware PNG／画像だけのCanvas文字照合まで確認しています。[分離preview／画像read](browser.md)、[Readit task](readit-task.md)を参照。
 
 ## 前のGitHub／CLI実機検証
 
@@ -144,4 +144,4 @@ python3 -m unittest discover -s scripts -p 'test_*.py' -v
 - OAuthリンクのCDP clickは外部Activityへの遷移後にnavigation待ちがtimeoutしたが、実際にはChromeへ遷移済みだった。画面遷移の失敗と決めつけず、foreground componentと認証状態を独立に確認した
 - keyboard表示中のCDP screenshotには重複描画が出たため、それだけで実表示を判定しない。実際のADB screenshotをkeyboard候補／clipboardが出ない状態でapp領域だけcropして確認。実keyboardのlayoutは別途数値検証
 
-まだ未確認：実credentialの期限切れrefresh、実モデルcompaction、実IME変換、実ツール途中のhard kill・電源断、長時間background、デスクトップの複数process排他、クリーンなnpm依存取得。GitHub／gh追加は実機確認済み。browser／画像readも実装・APK更新まで完了し、実機previewは画面ロック中のため保留。実モデルの自律CLI選択／vision、他package、resource loaderなどは別の作業。
+まだ未確認：実credentialの期限切れrefresh、実モデルcompaction、実IME変換、実ツール途中のhard kill・電源断、長時間background、デスクトップの複数process排他、クリーンなAndroid Pi依存取得。GitHub／gh追加と実機PiによるReadit／npm／Preview／画像読取を確認済みです。他package、WebGL／video、resource loader、巨大画像履歴のpagingは別の作業です。

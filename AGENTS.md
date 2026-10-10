@@ -5,7 +5,14 @@
 - Personal, Android-hosted coding environment for Galaxy SM-S931Z (ARM64).
 - `pi-durable` is the only agent backend. Do not launch a separate Pi CLI to compensate for missing mobile features.
 - Follow `pi-tui`'s separation of components, input/focus, rendering, and lifecycle; Android rendering is DOM/touch/IME, not ANSI emulation.
-- Base layout and interaction on ordinary Pi: flat transcript, thinking/tools, bottom editor and footer, slash commands. Use mobile-specific controls where touch, IME or narrow screens need them; do not default to a generic web-chat design.
+- Base layout and interaction on ordinary Pi: flat transcript, thinking/tools, bottom editor and
+  footer, slash commands. The owner chose a small, 16px `pi android client` label inside the
+  scrolling transcript (not pinned, no command instructions). Selected model and thinking belong
+  in that header as tappable selectors, not in the footer. Keep a composer with only editor and
+  Send, and a separate settings page. Placeholder is exactly `...`. Ordinary send uses Steer;
+  stop with `/abort` or Escape. Do not restore permanent command/menu/mode/stop bars or
+  official-looking `pi` branding. Use mobile-specific controls where touch, IME or narrow
+  screens need them; do not default to a generic web-chat design.
 - Preserve targetSdk 28 and the proven app-private Termux executable layout. Play/general-distribution compatibility is not a requirement.
 - Keep the reference repository and its uncommitted work intact. Never push its upstream.
 - New package identity and storage are separate from `org.pimobile.app`. No implicit conversation or credential migration. The owner explicitly requested removal of the old Android app in checkpoint 5; it was removed from user 0 only. Preserve the host reference repository.

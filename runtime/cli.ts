@@ -131,6 +131,32 @@ child.on('exit', (code, signal) => {
 `;
 }
 
+// Execute the existing npm entry through our Node, without rewriting the baseline shebang.
+export function nodeCLISource(node: string, entry: string, name: 'npm' | 'npx'): string {
+  return `#!${node}
+const fs = require('node:fs');
+const { spawn } = require('node:child_process');
+const { constants } = require('node:os');
+try {
+  if (!fs.lstatSync(${JSON.stringify(entry)}).isFile()) throw new Error('Invalid entry.');
+} catch {
+  console.error(${JSON.stringify(`${name} is unavailable in the existing Node baseline.`)});
+  process.exit(1);
+}
+const child = spawn(${JSON.stringify(node)}, [${JSON.stringify(entry)}, ...process.argv.slice(2)], {
+  env: process.env, stdio: 'inherit',
+});
+for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => child.kill(signal));
+child.on('error', () => {
+  console.error(${JSON.stringify(`${name} could not start.`)});
+  process.exitCode = 1;
+});
+child.on('exit', (code, signal) => {
+  process.exitCode = code ?? (signal ? 128 + (constants.signals[signal] ?? 1) : 1);
+});
+`;
+}
+
 export async function writeExecutable(file: string, source: string): Promise<void> {
   const temporary = `${file}.${randomUUID()}.tmp`;
   try {
@@ -186,6 +212,10 @@ export async function installGitTools(
     GIT_CURL_VERBOSE: undefined,
   };
   if (prefix) {
+    for (const name of ['npm', 'npx'] as const) {
+      const entry = path.join(prefix, 'lib/node_modules/npm/bin', `${name}-cli.js`);
+      await writeExecutable(path.join(bin, name), nodeCLISource(node, entry, name));
+    }
     const config = path.join(stateDir, 'gh');
     await privateDirectory(config);
     await writeExecutable(

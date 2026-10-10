@@ -65,17 +65,38 @@ select:focus-visible {
   scrollbar-color: #666 transparent;
   padding: 12px 0 16px;
 }
-.startup {
-  padding: 0 4px 16px;
-  color: var(--muted);
-  font-size: 12px;
+#app-header {
+  padding: 6px 4px;
+  background: #181818;
 }
-.startup strong {
+.logo {
   color: var(--accent);
   font-size: 16px;
+  line-height: 1;
 }
-.startup p {
-  margin: 2px 0 0;
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.header-controls button {
+  border: 0;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 4px 0;
+}
+#models {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+#thinking {
+  flex-shrink: 0;
+  min-width: 44px;
 }
 #mode-banner {
   color: #e0bd79;
@@ -285,17 +306,13 @@ select:focus-visible {
   --editor-border: #d39fce;
 }
 .editor-frame {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
   border-top: 1px solid var(--editor-border);
   border-bottom: 1px solid var(--editor-border);
 }
-.editor-legend {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 28px;
-}
 #status {
-  flex: 1;
   font-size: 12px;
   color: var(--muted);
   padding: 3px 4px;
@@ -304,11 +321,9 @@ select:focus-visible {
 #status.error {
   color: #efa5a5;
 }
-#abort {
-  color: #efa5a5;
-  border: 0;
-}
 textarea {
+  flex: 1;
+  min-width: 0;
   width: 100%;
   resize: none;
   min-height: 52px;
@@ -321,29 +336,9 @@ textarea {
 textarea::placeholder {
   color: #888;
 }
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 2px;
-}
-.actions button,
-.actions select {
-  border: 0;
-  color: var(--muted);
-}
-.actions select {
-  font-size: 12px;
-  max-width: 120px;
-}
-#command,
-#menu {
-  min-width: 44px;
-}
-#menu {
-  margin-left: auto;
-}
 #send {
+  border: 0;
+  flex-shrink: 0;
   color: var(--accent);
   font-weight: bold;
   min-width: 56px;
@@ -387,9 +382,16 @@ textarea::placeholder {
   font-size: 11px;
 }
 footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
   color: var(--muted);
   font-size: 12px;
+}
+.footer-info {
+  flex: 1;
+  min-width: 0;
 }
 .footer-row {
   display: flex;
@@ -397,7 +399,7 @@ footer {
   align-items: center;
   min-width: 0;
 }
-footer button {
+.footer-row > span {
   border: 0;
   border-radius: 0;
   padding: 4px;
@@ -417,11 +419,40 @@ footer button {
   flex: 1;
   min-width: 56px;
 }
-#models {
-  max-width: 55%;
+#settings-open {
+  border: 0;
+  padding: 4px;
+  color: var(--muted);
+  flex-shrink: 0;
 }
-#thinking {
-  min-width: 44px;
+#app.settings-open > :not(#settings-page):not(dialog) {
+  display: none;
+}
+#settings-page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+}
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.settings-header h1 {
+  font-size: 18px;
+  color: var(--accent);
+}
+#settings-body {
+  display: grid;
+  gap: 8px;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 8px 0;
+}
+#settings-body button {
+  text-align: left;
 }
 [hidden] {
   display: none !important;
@@ -487,12 +518,9 @@ dialog h2 {
     min-height: 34px;
     max-height: 70px;
   }
-  .editor-legend {
-    min-height: 24px;
-  }
 }
 @media (prefers-reduced-motion: no-preference) {
-  #composer.busy #status::before {
+  #app.busy #status::before {
     content: "◌ ";
     display: inline-block;
     animation: spin 1.4s linear infinite;

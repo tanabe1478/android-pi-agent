@@ -181,6 +181,9 @@ public final class MainActivity extends Activity {
     webView.evaluateJavascript("(() => {"
         + "const dialog = document.getElementById('dialog');"
         + "if (dialog?.open) { dialog.close(); return true; }"
+        + "const settings = document.getElementById('settings-page');"
+        + "if (settings && !settings.hidden) {"
+        + "document.getElementById('settings-back')?.click(); return true; }"
         + "const suggestions = document.getElementById('suggestions');"
         + "if (suggestions && !suggestions.hidden) { suggestions.hidden = true; return true; }"
         + "return false; })()", value -> {

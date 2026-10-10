@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 
 import { readPrivate, writePrivate } from './credentials.ts';
 import { AppError } from './protocol.ts';
+import { createCapture } from './browser-capture.ts';
 
 export function validatePreviewURL(value: unknown, bridgePort: number): string {
   try {
@@ -79,8 +80,10 @@ export function createPreview(stateDir: string, ownerPid: number, runtimePid = p
     }
   }
 
+  const nativeCapture = createCapture(stateDir, ownerPid, runtimePid, snapshot);
   return {
     snapshot,
+    capture: nativeCapture.capture,
     async open(value: unknown, bridgePort: number) {
       if (closed) throw new AppError('closed', 'Preview is closed.');
       const url = validatePreviewURL(value, bridgePort);
@@ -125,6 +128,7 @@ export function createPreview(stateDir: string, ownerPid: number, runtimePid = p
       return '\0webview_devtools_remote_' + state.pid;
     },
     close() {
+      nativeCapture.close();
       closed = true;
     },
   };

@@ -78,13 +78,17 @@ Android serviceが明示するprefixを、CodingToolsのNodeExecutionEnv.shellEn
 
 Previewは会話・モデル状態を所有しないprofileサービスです。private requestを前面のnative Activityが一度だけ消費し、owner／runtime PIDへ結びつけます。:previewプロセスとWebView data directoryを分け、そのsocketだけを既存header／Host／Origin認証付きCDP proxyで接続します。Pi／OAuth portやremote resourcesは許可しません。pi-browserは同じCodingToolsのshell環境から呼ぶCLIで、PlaywrightはCDP attachment専用です。
 
+Android screenshotは、foreground Preview WebViewだけをpostVisualStateCallback後に専用offscreen hardware Surfaceへ描画し、ImageReaderからbounded PNGへ変換します。Window／Pi／toolbar／keyboardは撮影しません。requestとresultはowner／runtime／preview PID、URL、nonce、期限とrevocable publication leaseへ結び、pause／destroyでは取消します。DesktopはPlaywright viewport PNGで、Androidの失敗を自動fallbackや再撮影で隠しません。
+
 画像はCodingToolsのreadをdurable wrapToolでdecorateし、同じExecutionEnvとSQLiteへimage contentを返します。専用vision agentや別のtool loopではありません。UIはbounded raster data URLだけを展開内に表示します。trusted同一UID／CDP scriptをsandboxする構成ではないことと、[host／実機の検証差](browser.md)を区別します。
 
 ## Piを基本にする表示
 
 画面は通常Piの配置・操作感を基本にし、mobileで難しい部分だけ変更する。
 フラットな本文、thinking、tool call/result、下部editor／footerとslash commandsを使う。
-IME誤送信を防ぐためEnterは改行のままで、touchの送信・停止・menuを残す。
+IME誤送信を防ぐためEnterは改行のまま、composerは入力欄と送信だけにする。
+停止は/abort・Escape、その他は別settingsとslash commandsへ置く。16pxの小さい
+pi android clientとmodel／thinking selectorsは履歴内をscrollし、footerへ重複させない。
 usageはdurableの累計を表示し、context占有率と混同しない。[UI方針と検証](ui.md)を参照。
 
 ## Android

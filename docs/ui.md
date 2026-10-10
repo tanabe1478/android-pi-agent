@@ -1,4 +1,30 @@
-# Piを基本にしたAndroid表示（チェックポイント4）
+# Piを基本にしたAndroid表示
+
+## 現在の配置（0.7.4-tools、0.7.3-uiの配置を維持）
+
+- 履歴の先頭は16pxの`pi android client`。操作の説明文は置かず、履歴と一緒に
+  スクロールして上へ消える。固定ヘッダーではない
+- 選択中のmodel／thinkingはそのヘッダーへ表示し、それぞれtapで選択dialogを開く。
+  設定変更は明示conversation ID付きで同じdurable controllerへ送り、draftを保持する
+- 下部composerは入力欄と送信buttonだけ。placeholderは`...`。通常送信はSteer、
+  Alt+EnterはFollow-up、停止は`/abort`またはEscape。`/`入力で候補を表示する
+- footerにはcwd／session／累積usageと設定画面への入口を残す。model／thinkingの
+  重複表示や常設のcommand／mode／stop／menu barは置かない
+- その他の操作は設定画面、`/settings`、既存slash commandsから利用する
+
+74 Node／desktop browser／bundle testsと6 Python packaging tests、計80件が成功。
+Galaxyへ`0.7.3-ui`をdata-preserving updateし、更新直前の6会話・27エントリ、
+確定entry digest、選択、model／thinking、認証、CLI registry／core hashesを保持した。
+ヘッダーのmodel／thinkingがdurable viewと一致し、両dialogを開閉できること、
+footerの重複表示なし、composerは送信button一つ、水平overflowなしを実機で確認した。
+実機の設定は変更せず、実際の選択・設定変更とdraft保持はfaux／desktopで検証した。
+
+0.7.4-toolsでもこの配置を維持し、更新直前の7会話・98確定エントリとdigest、
+選択／設定／認証／CLIを保持した。標準npm／npxとPreviewのhardware画像化を改善し、
+実機Piが公開Readitの画像だけから未知Canvas文字を正しく読めた。巨大画像履歴の
+paging／全snapshotの軽量化は未対応で、UIが所有する新しい会話backendは追加しない。
+
+以下のcheckpoint4実機記録は旧配置の検証記録であり、現在の配置とは区別する。
 
 通常のPiの配置・操作感を基本にし、小さい画面・タッチ・IMEで難しい箇所だけ
 スマホ向けに調整する。別のWebチャットアプリを基本形にはしない。
@@ -16,7 +42,7 @@
   短いpreviewを表示し、tap／Ctrl+Oで展開。live outputから確定resultへの更新でも
   展開状態を維持する。結果がないことを成功と決めつけない
 - editorの上下罫線をthinking levelで色分けする
-- editorの下へcwd／session、累積usage／model／thinkingを配置する
+- editorの下へcwd／session、累積usageを配置する。model／thinkingはヘッダーへ移動
 - `/`の候補は説明付きのリスト。ArrowUp／DownとTab、またはtapで選択する
 - `/model`、`/thinking`、`/resume`、`/login`などの操作を継続利用する
 - checkpoint5の`/github`／menuはprofile認証専用dialogを開く。PATはcomposerや会話へ入れず、masked inputを送信／closeで消す。この追加画面はdesktop／mockに加えGalaxyでも管理dialogの開閉・masked empty input・login非表示・JS error／overflowなしを確認。実PATの設定はsecret-awareな専用API経路で行った
@@ -27,12 +53,12 @@ Piのusage docs、assistant/user/tool/footer componentsを確認し、DOMでこ�
 ## スマホ向けに残す違い
 
 - **Enterは改行**。IME確定での誤送信を避ける。送信buttonとCtrl/Cmd+Enterを使う
-- Alt+Enterはfollow-up。通常送信のsteer／follow-up選択もtouchで操作できる
-- 停止buttonは実行中だけ表示する。hardware keyboardではEscapeでも停止
-- `/`のtouch shortcut、操作menu、footerのtouch selectors、dialogを用意する。
-  `/` shortcutは既存draftを上書きしない
+- Alt+Enterはfollow-up。通常送信はsteerで、常設のmode選択は置かない
+- 停止は`/abort`またはEscape。設定画面からも停止できる
+- typed `/`で候補を表示する。model／thinkingのtouch selectorsはヘッダーへ置き、
+  その他の操作は設定画面とdialogへまとめる
 - keyboardで高さが小さくなるとeditorを縮め、履歴の領域と送信controlを残す
-- narrow footerはpath／modelを省略し、tapして詳細を見る。usageも詳細dialogへ
+- narrow表示ではpath／modelを省略する。modelはtapで選択、cwd／usageの詳細は設定から
 - 本文・codeは折り返す。tableだけは内部の横scrollを許し、page全体は横にはみ出さない
 - user promptのfork操作は小さい`⋯`へまとめる
 

@@ -170,6 +170,20 @@ export async function createBridge(
               200,
               await preview.open(parsePreviewOpen(await body(request)), address.port),
             );
+          if (url.pathname === '/api/browser/screenshot' && request.method === 'POST') {
+            const value = await body(request);
+            if (
+              !value ||
+              typeof value !== 'object' ||
+              Array.isArray(value) ||
+              Object.keys(value).length
+            )
+              throw new AppError('invalid_action', 'Screenshot takes an empty JSON object.');
+            const png = await preview.capture(address.port);
+            response.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store' });
+            response.end(png);
+            return;
+          }
           const route = url.pathname.slice('/api/browser/cdp'.length);
           if (
             url.pathname.startsWith('/api/browser/cdp/') &&

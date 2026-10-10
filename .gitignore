@@ -12,6 +12,9 @@ bridge.json
 status.json
 preview-state.json
 preview-request.json
+preview-capture.json
+.capture-*.json
+.preview-image-*
 .preview-*.json
 open.html
 *.sqlite

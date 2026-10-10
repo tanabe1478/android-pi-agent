@@ -44,6 +44,17 @@
 
 ホストMac側のGitHub操作は従来のgh-op／git-credential-opを使います。Android側は1Password CLIへ依存せず、新アプリに明示的に保存したPATだけを使います。
 
+## npm／npxのmanaged launcher（0.7.4-tools）
+
+Readit taskでbaseline npmの固定Termux shebangが新app identityでは動かない問題を確認しました。profile binにnpm／npxを生成し、既存prefixのlib/node_modules/npm/binにあるJS entryを実際のNodeから起動します。usrのbinary／entryやnpm packageは書き換えず、upgrade／installも行いません。
+
+- cwd、argv、stdin／stdout／stderrを保持し、SIGINT／SIGTERMをchildへ転送する
+- childのexit code／signal failureを保持。entry欠落／symlinkはredactedなerrorで拒否する
+- package script／npx経由の任意コードはtrusted code。sandboxや自動download禁止機構ではない
+- hostのtest doubleで両CLI、baseline保持、stdio／args／cwd／exit、durable bashを検証
+- 実機Piが通常のnpm --version／npx --versionを実行し、既存11.20.0の利用を確認
+- third-party packageの全shebang互換、clean install、任意npm scriptの成功は未保証
+
 ## pi-pkgは追加専用
 
 ```sh
@@ -102,4 +113,4 @@ packageのSHA-256はHTTPSで取得したindexを基準にします。独立し�
 - temporary Web Screen Wake Lockは検証後に解除し、ADB forwardsも削除。Android設定は変更しない
 - ユーザーの明示依頼により旧org.pimobile.appをuser 0から削除。新アプリのdataとMac上の参照リポジトリは保持し、旧PAT／会話は移行しない
 
-実GitHubの失効／再認証失敗／解除、実CLI installの途中kill／電源断、他packageの互換性、実モデルによる自律CLI選択は未検証。browser preview移植、実IME変換、実compaction／途中killは次の別作業です。
+以上はcheckpoint5当時の検証です。現在は実機PiによるReadit clone／npm利用／分離preview／画像readも確認しています。実GitHubの失効／再認証失敗／解除、実CLI installの途中kill／電源断、他packageの互換性、実IME変換、実compactionは未検証です。[実作業での検証](readit-task.md)。

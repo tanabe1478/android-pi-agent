@@ -208,6 +208,8 @@ export async function openKernel(options: OpenOptions): Promise<AppController> {
     switch (name) {
       case 'help':
         return { kind: 'dialog', dialog: 'help' };
+      case 'settings':
+        return { kind: 'dialog', dialog: 'settings' };
       case 'login':
         if (options.demo) throw new AppError('unsupported', 'デモは実認証を使用しません。');
         return { kind: 'dialog', dialog: 'auth' };

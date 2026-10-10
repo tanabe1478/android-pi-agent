@@ -26,6 +26,8 @@ let draftRevision = 0;
 let connected = false;
 let errorMessage = '';
 let completionIndex = 0;
+let settingsReturnFocus;
+let settingsSelection;
 
 const authentication = new AuthenticationPanel(
   client,
@@ -49,10 +51,13 @@ function status() {
     (!connected ? '再接続しています…' : view ? activityOf(view) : '接続しています…');
   $('message').disabled = !view || !connected;
   $('send').disabled = !view || !connected || sending;
+  $('models').disabled = !view || !connected;
+  $('thinking').disabled = !view || !connected;
   const busy = view && busyOf(view);
-  $('abort').disabled = !connected || !busy;
-  $('abort').hidden = !busy;
-  $('composer').classList.toggle('busy', Boolean(busy));
+  $('status').hidden = Boolean(connected && !errorMessage && view && !busy);
+  $('app').classList.toggle('busy', Boolean(busy));
+  const stop = $('settings-stop');
+  if (stop) stop.disabled = !connected || !busy;
 }
 
 function render(next) {
@@ -80,7 +85,9 @@ function render(next) {
   $('models').title = agent.model
     ? `${agent.model.provider}/${agent.model.modelId}`
     : 'モデルを選択';
+  $('models').setAttribute('aria-label', `モデルを変更: ${$('models').textContent}`);
   $('thinking').textContent = agent.thinkingLevel ?? 'off';
+  $('thinking').setAttribute('aria-label', `思考レベルを変更: ${$('thinking').textContent}`);
   $('composer').dataset.thinking = agent.thinkingLevel ?? 'off';
   $('workspace').textContent = shortPath(agent.cwd);
   $('workspace').title = agent.cwd ?? '';
@@ -93,13 +100,17 @@ function render(next) {
 
   const queued = view.conversation.docs['pi.inbox']?.items ?? [];
   const conversationId = view.activeId;
+  $('queue').hidden = !queued.length;
   $('queue').replaceChildren(
     ...queued.map(item => {
       const row = element('div', undefined, 'queue-item');
       const text =
         typeof item.content === 'string' ? item.content : JSON.stringify(item.content ?? '');
       row.append(
-        element('span', `${item.mode === 'followUp' ? '後で' : '割込み'}: ${text.slice(0, 100)}`),
+        element(
+          'span',
+          `${item.mode === 'followUp' ? 'Follow-up' : 'Steer'}: ${text.slice(0, 100)}`,
+        ),
       );
       if (item.mode !== 'write')
         row.append(
@@ -140,7 +151,9 @@ async function dispatch(action) {
 function showDialog(kind, conversationId = view?.activeId) {
   if (!view) return;
 
-  if (kind === 'auth') {
+  if (kind === 'settings') {
+    openSettings(conversationId);
+  } else if (kind === 'auth') {
     authentication.open();
   } else if (kind === 'github') {
     github.open();
@@ -265,8 +278,8 @@ function complete() {
   );
 }
 
-async function submit(mode = $('input-mode').value) {
-  if (!view || sending || !connected) return;
+async function submit(mode = 'steer') {
+  if (!view || sending || !connected || !$('settings-page').hidden) return;
 
   const text = $('message').value;
   if (!text.trim()) return;
@@ -309,7 +322,7 @@ $('message').addEventListener('keydown', event => {
 
   if (event.key === 'Enter' && (event.ctrlKey || event.metaKey || event.altKey)) {
     event.preventDefault();
-    void submit(event.altKey ? 'followUp' : $('input-mode').value);
+    void submit(event.altKey ? 'followUp' : 'steer');
   }
   const items = suggestions($('message').value);
   if ($('suggestions').hidden || !items.length) return;
@@ -328,41 +341,49 @@ $('message').addEventListener('keydown', event => {
   }
 });
 
-$('command').addEventListener('click', () => {
-  // A touch shortcut must never replace an existing draft with a slash command.
-  if ($('message').value) return showDialog('help');
-  $('message').value = '/';
-  draftRevision++;
-  $('message').focus();
-  complete();
-  resizeEditor();
-});
-$('usage').addEventListener('click', () => showDialog('usage'));
-$('workspace').addEventListener('click', () => showDialog('workspace'));
-
 $('login').addEventListener('click', () => showDialog('auth'));
 $('models').addEventListener('click', () => showDialog('models'));
 $('thinking').addEventListener('click', () => showDialog('thinking'));
-$('sessions').addEventListener('click', () => showDialog('sessions'));
-$('abort').addEventListener(
-  'click',
-  () => view && dispatch({ type: 'abort', conversationId: view.activeId }),
-);
-$('menu').addEventListener('click', () => {
+$('settings-open').addEventListener('click', () => openSettings());
+$('settings-back').addEventListener('click', closeSettings);
+
+function closeSettings() {
+  $('settings-page').hidden = true;
+  $('app').classList.remove('settings-open');
+  if (settingsReturnFocus?.isConnected) settingsReturnFocus.focus();
+  if (settingsSelection && document.activeElement === $('message'))
+    $('message').setSelectionRange(...settingsSelection);
+  resizeEditor();
+}
+
+function openSettings(conversationId = view?.activeId) {
   if (!view) return;
-  const conversationId = view.activeId;
-  dialog.show('操作', [
+  if ($('settings-page').hidden) {
+    settingsReturnFocus =
+      document.activeElement === $('settings-open') ? $('message') : document.activeElement;
+    settingsSelection = [$('message').selectionStart, $('message').selectionEnd];
+  }
+  $('settings-page').hidden = false;
+  $('app').classList.add('settings-open');
+  const stop = button('実行を停止', () => dispatch({ type: 'abort', conversationId }));
+  stop.id = 'settings-stop';
+  stop.disabled = !connected || !busyOf(view);
+  $('settings-body').replaceChildren(
+    element('p', `モデル: ${view.conversation.docs['pi.agent']?.model?.modelId ?? ''}`),
     button('ヘルプ', () => showDialog('help', conversationId)),
     button('/model モデル', () => showDialog('models', conversationId)),
     button('/thinking 思考レベル', () => showDialog('thinking', conversationId)),
     button('/resume 会話', () => showDialog('sessions', conversationId)),
+    button('作業ディレクトリ', () => showDialog('workspace', conversationId)),
+    button('累積使用量', () => showDialog('usage', conversationId)),
+    stop,
     button(transcript.showThinking ? '思考を折りたたむ' : '思考を表示', () => {
       transcript.toggleThinking();
-      dialog.close();
+      openSettings(conversationId);
     }),
     button(transcript.expandTools ? 'ツール結果を折りたたむ' : 'ツール結果を展開', () => {
       transcript.toggleTools();
-      dialog.close();
+      openSettings(conversationId);
     }),
     ...(view.auth
       ? [
@@ -392,9 +413,11 @@ $('menu').addEventListener('click', () => {
     button('文脈をリセット', () => {
       void dispatch({ type: 'clear', conversationId });
     }),
+    element('p', '通常送信はSteer。Alt+EnterはFollow-up、/abortまたはEscapeで停止します。'),
     element('p', '拡張・skills・templates・MCP・添付は未対応です。'),
-  ]);
-});
+  );
+  $('settings-back').focus();
+}
 
 window.addEventListener('keydown', event => {
   if (event.isComposing || event.keyCode === 229 || event.defaultPrevented || $('dialog').open)
@@ -407,6 +430,11 @@ window.addEventListener('keydown', event => {
     return;
   }
   if (event.key !== 'Escape') return;
+  if (!$('settings-page').hidden) {
+    event.preventDefault();
+    closeSettings();
+    return;
+  }
   if (!$('suggestions').hidden) {
     $('suggestions').hidden = true;
     return;

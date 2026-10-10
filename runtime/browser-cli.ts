@@ -1,9 +1,11 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 
 import { readPrivate } from './credentials.ts';
 import { validatePreviewURL } from './browser-preview.ts';
+import { captureViewport } from './browser-image.ts';
+import { imageMimeType, MAX_IMAGE_BYTES } from './image-read.ts';
 
 async function bridge(stateDir: string) {
   try {
@@ -98,13 +100,49 @@ export async function browserCLI(args: string[], stateDir: string) {
     console.log('pi-browser open URL | status | snapshot | screenshot FILE.png | run SCRIPT.mjs');
     return;
   }
+  if (command === 'screenshot' && process.platform === 'android') {
+    if (!value || !value.endsWith('.png')) throw new Error('Expected FILE.png.');
+    const { port, token } = await bridge(stateDir);
+    const response = await fetch(`http://127.0.0.1:${port}/api/browser/screenshot`, {
+      method: 'POST',
+      headers: { 'x-pi-token': token, 'content-type': 'application/json' },
+      body: '{}',
+      redirect: 'error',
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok || !response.body || response.headers.get('content-type') !== 'image/png')
+      throw new Error('Native preview capture failed.');
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    const reader = response.body.getReader();
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        size += value.length;
+        if (size > MAX_IMAGE_BYTES) throw new Error('Preview image exceeds 8 MiB.');
+        chunks.push(value);
+      }
+    } finally {
+      await reader.cancel().catch(() => {});
+      reader.releaseLock();
+    }
+    const bytes = Buffer.concat(chunks);
+    if (imageMimeType(bytes) !== 'image/png') throw new Error('Invalid preview image.');
+    const file = path.resolve(value);
+    await mkdir(path.dirname(file), { recursive: true, mode: 0o700 });
+    await writeFile(file, bytes, { mode: 0o600 });
+    console.log(file);
+    return;
+  }
   const { browser, page, chromium } = await connectPreview(stateDir);
   try {
     if (command === 'screenshot') {
       if (!value || !value.endsWith('.png')) throw new Error('Expected FILE.png.');
       const file = path.resolve(value);
-      await mkdir(path.dirname(file), { recursive: true });
-      await page.screenshot({ path: file });
+      const bytes = await captureViewport(page);
+      await mkdir(path.dirname(file), { recursive: true, mode: 0o700 });
+      await writeFile(file, bytes, { mode: 0o600 });
       console.log(file);
     } else if (command === 'snapshot') {
       const result = await page.evaluate(() => ({

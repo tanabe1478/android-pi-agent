@@ -11,53 +11,52 @@
   <body>
     <main id="app">
       <div id="mode-banner" hidden>ローカルデモ — モデルAPIへは接続していません</div>
-      <section id="transcript" aria-label="会話履歴" tabindex="0"></section>
+      <section id="transcript" aria-label="会話履歴" tabindex="0">
+        <header id="app-header" aria-label="pi android client">
+          <strong class="logo">pi android client</strong>
+          <div class="header-controls">
+            <button id="models" type="button" aria-label="モデルを変更" disabled>モデル</button>
+            <button id="thinking" type="button" aria-label="思考レベルを変更" disabled>off</button>
+          </div>
+        </header>
+      </section>
       <div id="auth-bar" hidden>
         <span>実モデルを使うには /login</span>
         <button id="login" type="button">ChatGPTログイン</button>
       </div>
+      <div id="queue" aria-label="入力キュー" hidden></div>
+      <div id="status" role="status" aria-live="polite">接続しています…</div>
 
       <form id="composer" data-thinking="off">
         <div id="suggestions" aria-label="コマンド候補" hidden></div>
-        <div id="queue" aria-label="入力キュー"></div>
         <div class="editor-frame">
-          <div class="editor-legend">
-            <span id="status" role="status" aria-live="polite">接続しています…</span>
-            <button id="abort" type="button" disabled hidden>停止</button>
-          </div>
           <label class="sr-only" for="message">メッセージ</label>
-          <textarea
-            id="message"
-            rows="2"
-            placeholder="依頼を入力… / でコマンド"
-            disabled
-          ></textarea>
-          <div class="actions">
-            <button id="command" type="button" aria-label="コマンドを入力">/</button>
-            <label class="sr-only" for="input-mode">実行中の入力</label>
-            <select id="input-mode">
-              <option value="steer">割込み</option>
-              <option value="followUp">あとで実行</option>
-            </select>
-            <button id="menu" type="button" aria-label="操作">⋯</button>
-            <button id="send" type="submit" disabled>送信</button>
-          </div>
+          <textarea id="message" rows="2" placeholder="..." disabled></textarea>
+          <button id="send" type="submit" disabled>送信</button>
         </div>
       </form>
 
       <footer aria-label="セッションの状態">
-        <div class="footer-row location-row">
-          <button id="workspace" type="button" aria-label="作業ディレクトリの詳細">workspace</button>
-          <span aria-hidden="true">•</span>
-          <button id="sessions" type="button" aria-label="会話を切り替え">会話</button>
+        <div class="footer-info">
+          <div class="footer-row location-row">
+            <span id="workspace">workspace</span>
+            <span aria-hidden="true">•</span>
+            <span id="sessions">会話</span>
+          </div>
+          <div class="footer-row stats-row">
+            <span id="usage">↑0 ↓0</span>
+          </div>
         </div>
-        <div class="footer-row stats-row">
-          <button id="usage" type="button" aria-label="累積使用量の詳細">↑0 ↓0</button>
-          <button id="models" type="button">モデル</button>
-          <span aria-hidden="true">•</span>
-          <button id="thinking" type="button" aria-label="思考レベルを選択">off</button>
-        </div>
+        <button id="settings-open" type="button">設定</button>
       </footer>
+
+      <section id="settings-page" aria-labelledby="settings-title" hidden>
+        <div class="settings-header">
+          <h1 id="settings-title">設定</h1>
+          <button id="settings-back" type="button">戻る</button>
+        </div>
+        <div id="settings-body"></div>
+      </section>
 
       <dialog id="dialog">
         <h2 id="dialog-title"></h2>
